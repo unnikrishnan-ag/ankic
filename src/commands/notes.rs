@@ -145,6 +145,43 @@ pub enum NotesCmd {
         #[arg(required = true)]
         ids: Vec<String>,
     },
+    /// Plan converting notes from one note type to another
+    #[command(name = "plan-conversion")]
+    PlanConversion {
+        /// Source note type name
+        #[arg(long, conflicts_with = "source_id")]
+        source_name: Option<String>,
+        /// Source note type ID
+        #[arg(long, conflicts_with = "source_name")]
+        source_id: Option<String>,
+        /// Target note type name
+        #[arg(long, conflicts_with = "target_id")]
+        target_name: Option<String>,
+        /// Target note type ID
+        #[arg(long, conflicts_with = "target_name")]
+        target_id: Option<String>,
+    },
+    /// Convert notes to a target note type using a conversion plan
+    Convert {
+        /// Note IDs to convert
+        #[arg(required = true)]
+        ids: Vec<String>,
+        /// Target note type name
+        #[arg(long, conflicts_with = "target_id")]
+        target_name: Option<String>,
+        /// Target note type ID
+        #[arg(long, conflicts_with = "target_name")]
+        target_id: Option<String>,
+        /// YAML or JSON array of field ConversionMapping objects ({target, source})
+        #[arg(long)]
+        fields: String,
+        /// YAML or JSON array of template ConversionMapping objects ({target, source})
+        #[arg(long)]
+        templates: String,
+        /// Plan token returned by notes.planConversion
+        #[arg(long)]
+        plan_token: String,
+    },
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -368,6 +405,44 @@ pub fn to_rpc_plan(cmd: &NotesCmd) -> Result<RpcPlan, CliError> {
             ))
         }
         NotesCmd::Delete { ids } => Ok(call_plan("notes.delete", json!({ "ids": ids }))),
+        NotesCmd::PlanConversion {
+            source_name,
+            source_id,
+            target_name,
+            target_id,
+        } => {
+            let source = make_ref(source_name.as_deref(), source_id.as_deref(), "source")?;
+            let target = make_ref(target_name.as_deref(), target_id.as_deref(), "target")?;
+            Ok(call_plan(
+                "notes.planConversion",
+                json!({
+                    "source": source,
+                    "target": target,
+                }),
+            ))
+        }
+        NotesCmd::Convert {
+            ids,
+            target_name,
+            target_id,
+            fields,
+            templates,
+            plan_token,
+        } => {
+            let target = make_ref(target_name.as_deref(), target_id.as_deref(), "target")?;
+            let fields_arr = parse_yaml_or_json_array(fields, "--fields")?;
+            let templates_arr = parse_yaml_or_json_array(templates, "--templates")?;
+            Ok(call_plan(
+                "notes.convert",
+                json!({
+                    "ids": ids,
+                    "target": target,
+                    "fields": fields_arr,
+                    "templates": templates_arr,
+                    "planToken": plan_token,
+                }),
+            ))
+        }
     }
 }
 
@@ -730,5 +805,73 @@ mod tests {
             "notes.delete",
         );
         assert_eq!(p_delete, json!({ "ids": ["1001", "1002"] }));
+    }
+
+    #[test]
+    fn notes_plan_conversion_and_convert_produce_valid_plans() {
+        let p_plan = assert_valid_call(
+            NotesCmd::PlanConversion {
+                source_name: Some("Basic".into()),
+                source_id: None,
+                target_name: None,
+                target_id: Some("2001".into()),
+            },
+            "notes.planConversion",
+        );
+        assert_eq!(
+            p_plan,
+            json!({
+                "source": { "name": "Basic" },
+                "target": { "id": "2001" }
+            })
+        );
+
+        let err_missing_source = to_rpc_plan(&NotesCmd::PlanConversion {
+            source_name: None,
+            source_id: None,
+            target_name: Some("Cloze".into()),
+            target_id: None,
+        })
+        .unwrap_err();
+        assert_eq!(err_missing_source.exit_code(), 2);
+
+        let p_convert_yaml = assert_valid_call(
+            NotesCmd::Convert {
+                ids: vec!["1001".into(), "1002".into()],
+                target_name: Some("Basic (and reversed card)".into()),
+                target_id: None,
+                fields: "- target: Front\n  source: Front\n- target: Extra\n  source: null".into(),
+                templates: r#"[{"target": "Card 1", "source": "Card 1"}, {"target": "Card 2", "source": null}]"#.into(),
+                plan_token: "plan-tok-123".into(),
+            },
+            "notes.convert",
+        );
+        assert_eq!(
+            p_convert_yaml,
+            json!({
+                "ids": ["1001", "1002"],
+                "target": { "name": "Basic (and reversed card)" },
+                "fields": [
+                    { "target": "Front", "source": "Front" },
+                    { "target": "Extra", "source": null }
+                ],
+                "templates": [
+                    { "target": "Card 1", "source": "Card 1" },
+                    { "target": "Card 2", "source": null }
+                ],
+                "planToken": "plan-tok-123"
+            })
+        );
+
+        let err_non_array_fields = to_rpc_plan(&NotesCmd::Convert {
+            ids: vec!["1001".into()],
+            target_name: None,
+            target_id: Some("2001".into()),
+            fields: r#"{"target": "Front", "source": "Front"}"#.into(),
+            templates: "[]".into(),
+            plan_token: "plan-tok-123".into(),
+        })
+        .unwrap_err();
+        assert_eq!(err_non_array_fields.exit_code(), 2);
     }
 }
