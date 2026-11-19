@@ -16,6 +16,7 @@ pub mod note_types;
 pub mod notes;
 pub mod operations;
 pub mod packages;
+pub mod reviews;
 pub mod scheduling;
 pub mod tags;
 
@@ -28,6 +29,7 @@ pub use note_types::NoteTypesCmd;
 pub use notes::NotesCmd;
 pub use operations::OperationsCmd;
 pub use packages::PackagesCmd;
+pub use reviews::ReviewsCmd;
 pub use scheduling::SchedulingCmd;
 pub use tags::TagsCmd;
 
@@ -153,6 +155,12 @@ pub enum Commands {
     Scheduling {
         #[command(subcommand)]
         command: SchedulingCmd,
+    },
+
+    /// Review log inspection commands (list, latest-id)
+    Reviews {
+        #[command(subcommand)]
+        command: ReviewsCmd,
     },
 
     /// Async operation tracking (get, wait, cancel)
@@ -310,6 +318,7 @@ pub fn to_rpc_plan(cmd: &Commands) -> Result<RpcPlan, CliError> {
         Commands::Media { command } => media::to_rpc_plan(command),
         Commands::Packages { command } => packages::to_rpc_plan(command),
         Commands::Scheduling { command } => scheduling::to_rpc_plan(command),
+        Commands::Reviews { command } => reviews::to_rpc_plan(command),
         Commands::Operations { command } => operations::to_rpc_plan(command),
         Commands::Batch(args) => {
             let requests = parse_batch_requests(args)?;
