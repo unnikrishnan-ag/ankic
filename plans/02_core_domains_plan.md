@@ -10,10 +10,11 @@ Modularize `src/commands/` into clean domain files and expand the core Anki doma
 - [ ] **Phase 4 — Complete `note-types` Domain (All 8 Methods) (`4.1`–`4.2`)**
 
 ### Handoff Context (Updated After Each Task)
-> **Next task**: `1.2` (Extract & Enhance `decks` Domain)
+> **Next task**: `1.3` (Implement `deck-presets` Domain)
 >
 > **Context from completed tasks**:
 > - **1.1**: Created `src/commands/helpers.rs` (`call_plan`, `make_ref`, `make_refs`, `make_sort`, `parse_yaml_or_json_value`, `parse_yaml_or_json_object`, `parse_yaml_or_json_array`, `read_input_or_stdin`), `src/commands/collection.rs` (`CollectionCmd`, `to_rpc_plan` covering `collection.get`, `collection.sync`, `collection.refresh`, `collection.checkIntegrity`, `collection.undo`), and `src/commands/operations.rs` (`OperationsCmd`, `to_rpc_plan` covering `operations.get`, `operations.cancel`, `RpcPlan::WaitOperation`). Wired `helpers`, `collection`, and `operations` into `src/commands/mod.rs` with `pub use collection::CollectionCmd; pub use operations::OperationsCmd;`.
+> - **1.2**: Created `src/commands/decks.rs` (`DecksCmd`, `to_rpc_plan` covering `decks.list`, `decks.get`, `decks.create`, `decks.update`, `decks.delete` with single `--name`/`--id` or multi-deck `--names`/`--ids` and `--delete-cards` enforcement, and `decks.getCounts` defaulting `includeChildren: true` with `--no-children` and `--include-children`). Wired `pub mod decks; pub use decks::DecksCmd;` into `src/commands/mod.rs` and removed the now-unused `make_ref` helper from `src/commands/mod.rs`.
 
 > [!IMPORTANT]
 > ### Autonomous Execution Protocol: `"Continue with next task @plans/02_core_domains_plan.md"`
@@ -69,7 +70,7 @@ Modularize `src/commands/` into clean domain files and expand the core Anki doma
     - Add unit tests in `helpers.rs`, `collection.rs`, and `operations.rs` asserting exact `RpcPlan` output and validating every generated `(method, params)` against `schema::validate_method_params`.
   - **Verify**: `cargo test --all-targets && cargo clippy --all-targets -- -D warnings`
 
-- [ ] **1.2 Extract & Enhance `decks` Domain (`src/commands/decks.rs`)**
+- [x] **1.2 Extract & Enhance `decks` Domain (`src/commands/decks.rs`)**
   - **File(s)**:
     - `src/commands/decks.rs` (new)
     - `src/commands/mod.rs` (modify)

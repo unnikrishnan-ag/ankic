@@ -7,10 +7,12 @@ use crate::output::OutputFormat;
 use crate::schema;
 
 pub mod collection;
+pub mod decks;
 pub mod helpers;
 pub mod operations;
 
 pub use collection::CollectionCmd;
+pub use decks::DecksCmd;
 pub use operations::OperationsCmd;
 
 #[derive(Parser)]
@@ -143,49 +145,6 @@ pub struct SchemaArgs {
     /// Show documented error codes and server limits instead of methods
     #[arg(long)]
     pub errors: bool,
-}
-
-#[derive(Subcommand)]
-pub enum DecksCmd {
-    /// List all decks
-    List,
-    /// Get a deck by name or ID
-    Get {
-        #[arg(long, conflicts_with = "id")]
-        name: Option<String>,
-        #[arg(long, conflicts_with = "name")]
-        id: Option<String>,
-    },
-    /// Create a normal deck
-    Create { name: String },
-    /// Rename a deck
-    Update {
-        #[arg(long, conflicts_with = "id")]
-        name: Option<String>,
-        #[arg(long, conflicts_with = "name")]
-        id: Option<String>,
-        /// New deck name
-        #[arg(long)]
-        new_name: String,
-    },
-    /// Delete a deck and its cards (requires --delete-cards)
-    Delete {
-        #[arg(long, conflicts_with = "id")]
-        name: Option<String>,
-        #[arg(long, conflicts_with = "name")]
-        id: Option<String>,
-        #[arg(long)]
-        delete_cards: bool,
-    },
-    /// Get due-tree counts for a deck
-    Counts {
-        #[arg(long, conflicts_with = "id")]
-        name: Option<String>,
-        #[arg(long, conflicts_with = "name")]
-        id: Option<String>,
-        #[arg(long)]
-        include_children: bool,
-    },
 }
 
 #[derive(Subcommand)]
@@ -412,43 +371,7 @@ pub fn to_rpc_plan(cmd: &Commands) -> Result<RpcPlan, CliError> {
         }
         Commands::Describe => Ok(call_plan("api.describe", json!({}))),
         Commands::Collection { command } => collection::to_rpc_plan(command),
-        Commands::Decks { command } => match command {
-            DecksCmd::List => Ok(call_plan("decks.list", json!({}))),
-            DecksCmd::Get { name, id } => Ok(call_plan(
-                "decks.get",
-                json!({ "deck": make_ref(name.as_deref(), id.as_deref())? }),
-            )),
-            DecksCmd::Create { name } => Ok(call_plan("decks.create", json!({ "name": name }))),
-            DecksCmd::Update { name, id, new_name } => Ok(call_plan(
-                "decks.update",
-                json!({
-                    "deck": make_ref(name.as_deref(), id.as_deref())?,
-                    "name": new_name,
-                }),
-            )),
-            DecksCmd::Delete {
-                name,
-                id,
-                delete_cards,
-            } => Ok(call_plan(
-                "decks.delete",
-                json!({
-                    "decks": [make_ref(name.as_deref(), id.as_deref())?],
-                    "deleteCards": delete_cards,
-                }),
-            )),
-            DecksCmd::Counts {
-                name,
-                id,
-                include_children,
-            } => Ok(call_plan(
-                "decks.getCounts",
-                json!({
-                    "deck": make_ref(name.as_deref(), id.as_deref())?,
-                    "includeChildren": include_children,
-                }),
-            )),
-        },
+        Commands::Decks { command } => decks::to_rpc_plan(command),
         Commands::Notes { command } => match command {
             NotesCmd::Get { id } => Ok(call_plan("notes.get", json!({ "id": id }))),
             NotesCmd::Search {
@@ -687,16 +610,6 @@ fn parse_batch_requests(args: &BatchArgs) -> Result<Vec<(String, Value)>, CliErr
         requests.push((method, params));
     }
     Ok(requests)
-}
-
-fn make_ref(name: Option<&str>, id: Option<&str>) -> Result<Value, CliError> {
-    match (name, id) {
-        (Some(n), None) => Ok(json!({ "name": n })),
-        (None, Some(i)) => Ok(json!({ "id": i })),
-        _ => Err(CliError::InvalidInput(
-            "Specify exactly one of --name or --id".into(),
-        )),
-    }
 }
 
 #[cfg(test)]
