@@ -9,10 +9,11 @@ Implement the three-layer automated integration and contract test suites (`tests
 - [ ] **Phase 3 — CLI Binary End-to-End Tests & Documentation (`3.1`–`3.2`)**
 
 ### Handoff Context (Updated After Each Task)
-> **Next task**: `1.2` (Add Core Domain Subcommand CLI-to-Schema Contract Tests)
+> **Next task**: `1.3` (Add Extended Domain Subcommand Contract Tests & 96-Method Exhaustive Coverage Assertion)
 >
 > **Context from completed tasks**:
 > - **1.1**: Created `tests/schema_contract_tests.rs` with `ROOT_SCHEMA` and `METHOD_VALIDATORS` (`jsonschema::draft202012::new` compiled for every `x-methods.<method>.params` and `x-methods.<method>.request` with `$defs`), `validate_rpc_contract(method: &str, raw_params: &Value) -> Result<(), String>` (validates both no-session and scope-aware `--session "test-session"` modes, plus `anki_skill::schema::validate_method_params`), and `assert_cli_args_conform(args: &[&str]) -> Vec<String>` (handling `RpcPlan::Local`, `Call`, `Paginate`, `WaitOperation`, and `Batch` in `Execute`/`Transport` modes). Added self-tests `schema_x_examples_pass_contract_validation` (16 examples) and `schema_x_invalid_examples_are_rejected` (17 invalid examples).
+> - **1.2**: Added `core_domain_cli_cases()`, `escape_hatches_and_schema_local_contract`, and `core_domain_subcommands_conform_to_schema` in `tests/schema_contract_tests.rs`, covering all 53 core domain & escape-hatch RPC methods (`api.describe`, `api.execute`, `collection` [5], `operations` [2 + `wait`], `decks` [6], `deckPresets` [6], `notes` [12], `cards` [7], `tags` [5], `noteTypes` [8]) plus local `schema`, `schema notes.create`, and `schema --errors` assertions, YAML/JSON `--params`/`--fields`, `--name`/`--id` refs, and `--all` pagination.
 
 > [!IMPORTANT]
 > ### Autonomous Execution Protocol: `"Continue with next task @plans/04_testing_and_docs_plan.md"`
@@ -57,7 +58,7 @@ Implement the three-layer automated integration and contract test suites (`tests
     - Add self-tests in `tests/schema_contract_tests.rs` verifying that every entry in `x-examples` passes `validate_rpc_contract` and every entry in `x-invalidExamples` in `schemas/api-v1.schema.json` is rejected.
   - **Verify**: `cargo test --test schema_contract_tests` and `cargo clippy --all-targets -- -D warnings`
 
-- [ ] **1.2 Add Core Domain Subcommand CLI-to-Schema Contract Tests**
+- [x] **1.2 Add Core Domain Subcommand CLI-to-Schema Contract Tests**
   - **File(s)**: `tests/schema_contract_tests.rs`
   - **Scope**:
     - Add table-driven CLI-to-schema contract tests using `assert_cli_args_conform` for all core domain subcommands and escape hatches, covering both required and optional flag combinations (including `--name` vs `--id` `Reference` variants and YAML vs JSON `--fields` / `--params` inputs):
