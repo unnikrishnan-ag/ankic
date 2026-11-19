@@ -4,17 +4,18 @@
 Modularize `src/commands/` into clean domain files and expand the core Anki domain subcommands (`collection`, `operations`, `decks`, `deck-presets`, `notes`, `cards`, `tags`, `note-types`) to achieve 100% method coverage across all 51 JSON-RPC methods in those 8 namespaces. Every subcommand variant translates deterministically via `to_rpc_plan` into schema-compliant `(method, params)` payloads with YAML/JSON input support and unit test coverage against `schemas/api-v1.schema.json`.
 
 ### Implementation Status
-- [ ] **Phase 1 — Command Modularization & Collection, Operations, Decks, Deck Presets (`1.1`–`1.3`)**
+- [x] **Phase 1 — Command Modularization & Collection, Operations, Decks, Deck Presets (`1.1`–`1.3`)**
 - [ ] **Phase 2 — Complete `notes` Domain (All 12 Methods) (`2.1`–`2.3`)**
 - [ ] **Phase 3 — Complete `cards` & `tags` Domains (12 Methods) (`3.1`–`3.2`)**
 - [ ] **Phase 4 — Complete `note-types` Domain (All 8 Methods) (`4.1`–`4.2`)**
 
 ### Handoff Context (Updated After Each Task)
-> **Next task**: `1.3` (Implement `deck-presets` Domain)
+> **Next task**: `2.1` (Extract `notes` Domain: Read & Validation Methods)
 >
 > **Context from completed tasks**:
 > - **1.1**: Created `src/commands/helpers.rs` (`call_plan`, `make_ref`, `make_refs`, `make_sort`, `parse_yaml_or_json_value`, `parse_yaml_or_json_object`, `parse_yaml_or_json_array`, `read_input_or_stdin`), `src/commands/collection.rs` (`CollectionCmd`, `to_rpc_plan` covering `collection.get`, `collection.sync`, `collection.refresh`, `collection.checkIntegrity`, `collection.undo`), and `src/commands/operations.rs` (`OperationsCmd`, `to_rpc_plan` covering `operations.get`, `operations.cancel`, `RpcPlan::WaitOperation`). Wired `helpers`, `collection`, and `operations` into `src/commands/mod.rs` with `pub use collection::CollectionCmd; pub use operations::OperationsCmd;`.
 > - **1.2**: Created `src/commands/decks.rs` (`DecksCmd`, `to_rpc_plan` covering `decks.list`, `decks.get`, `decks.create`, `decks.update`, `decks.delete` with single `--name`/`--id` or multi-deck `--names`/`--ids` and `--delete-cards` enforcement, and `decks.getCounts` defaulting `includeChildren: true` with `--no-children` and `--include-children`). Wired `pub mod decks; pub use decks::DecksCmd;` into `src/commands/mod.rs` and removed the now-unused `make_ref` helper from `src/commands/mod.rs`.
+> - **1.3**: Created `src/commands/deck_presets.rs` (`DeckPresetsCmd`, `to_rpc_plan` covering `deckPresets.list`, `deckPresets.get`, `deckPresets.create` with optional `cloneFrom`, `deckPresets.update` with `anyOf` validation for `--new-name`/`--settings` and async `--no-wait`/`--timeout`, `deckPresets.assign` with repeatable `--deck-name`/`--deck-id`, and `deckPresets.delete` with optional `replacement`). Wired `pub mod deck_presets; pub use deck_presets::DeckPresetsCmd;` and `Commands::DeckPresets` (`deck-presets`) into `src/commands/mod.rs`.
 
 > [!IMPORTANT]
 > ### Autonomous Execution Protocol: `"Continue with next task @plans/02_core_domains_plan.md"`
@@ -88,7 +89,7 @@ Modularize `src/commands/` into clean domain files and expand the core Anki doma
     - Add unit tests in `src/commands/decks.rs` testing all 6 `decks.*` methods (single and multi-deck delete, missing `--delete-cards` error, reference by name vs id) and validating params via `schema::validate_method_params`.
   - **Verify**: `cargo test --all-targets && cargo clippy --all-targets -- -D warnings`
 
-- [ ] **1.3 Implement `deck-presets` Domain (`src/commands/deck_presets.rs`)**
+- [x] **1.3 Implement `deck-presets` Domain (`src/commands/deck_presets.rs`)**
   - **File(s)**:
     - `src/commands/deck_presets.rs` (new)
     - `src/commands/mod.rs` (modify)

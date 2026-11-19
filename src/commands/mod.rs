@@ -7,11 +7,13 @@ use crate::output::OutputFormat;
 use crate::schema;
 
 pub mod collection;
+pub mod deck_presets;
 pub mod decks;
 pub mod helpers;
 pub mod operations;
 
 pub use collection::CollectionCmd;
+pub use deck_presets::DeckPresetsCmd;
 pub use decks::DecksCmd;
 pub use operations::OperationsCmd;
 
@@ -87,6 +89,13 @@ pub enum Commands {
     Decks {
         #[command(subcommand)]
         command: DecksCmd,
+    },
+
+    /// Deck preset commands (list, get, create, update, assign, delete)
+    #[command(name = "deck-presets")]
+    DeckPresets {
+        #[command(subcommand)]
+        command: DeckPresetsCmd,
     },
 
     /// Note commands (get, search, create, update, delete, validate)
@@ -372,6 +381,7 @@ pub fn to_rpc_plan(cmd: &Commands) -> Result<RpcPlan, CliError> {
         Commands::Describe => Ok(call_plan("api.describe", json!({}))),
         Commands::Collection { command } => collection::to_rpc_plan(command),
         Commands::Decks { command } => decks::to_rpc_plan(command),
+        Commands::DeckPresets { command } => deck_presets::to_rpc_plan(command),
         Commands::Notes { command } => match command {
             NotesCmd::Get { id } => Ok(call_plan("notes.get", json!({ "id": id }))),
             NotesCmd::Search {
