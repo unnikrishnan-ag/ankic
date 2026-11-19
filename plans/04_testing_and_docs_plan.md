@@ -9,12 +9,13 @@ Implement the three-layer automated integration and contract test suites (`tests
 - [ ] **Phase 3 — CLI Binary End-to-End Tests & Documentation (`3.1`–`3.2`)**
 
 ### Handoff Context (Updated After Each Task)
-> **Next task**: `2.1` (Create Mock HTTP Tests for Envelopes, Bearer Auth, and Scope-Aware Session Injection)
+> **Next task**: `2.2` (Add Mock HTTP Tests for Cursor Auto-Pagination & Async `OperationHandle` Lifecycle)
 >
 > **Context from completed tasks**:
 > - **1.1**: Created `tests/schema_contract_tests.rs` with `ROOT_SCHEMA` and `METHOD_VALIDATORS` (`jsonschema::draft202012::new` compiled for every `x-methods.<method>.params` and `x-methods.<method>.request` with `$defs`), `validate_rpc_contract(method: &str, raw_params: &Value) -> Result<(), String>` (validates both no-session and scope-aware `--session "test-session"` modes, plus `anki_skill::schema::validate_method_params`), and `assert_cli_args_conform(args: &[&str]) -> Vec<String>` (handling `RpcPlan::Local`, `Call`, `Paginate`, `WaitOperation`, and `Batch` in `Execute`/`Transport` modes). Added self-tests `schema_x_examples_pass_contract_validation` (16 examples) and `schema_x_invalid_examples_are_rejected` (17 invalid examples).
 > - **1.2**: Added `core_domain_cli_cases()`, `escape_hatches_and_schema_local_contract`, and `core_domain_subcommands_conform_to_schema` in `tests/schema_contract_tests.rs`, covering all 53 core domain & escape-hatch RPC methods (`api.describe`, `api.execute`, `collection` [5], `operations` [2 + `wait`], `decks` [6], `deckPresets` [6], `notes` [12], `cards` [7], `tags` [5], `noteTypes` [8]) plus local `schema`, `schema notes.create`, and `schema --errors` assertions, YAML/JSON `--params`/`--fields`, `--name`/`--id` refs, and `--all` pagination.
 > - **1.3**: Added `extended_domain_cli_cases()`, `extended_domain_subcommands_conform_to_schema`, and `all_96_schema_methods_covered_by_cli_subcommands` in `tests/schema_contract_tests.rs`, covering all 43 extended domain methods (`media` [5], `packages` [2], `scheduling` [9], `reviews` [2], `statistics` [4], `profiles` [3], `access` [1], `advanced` [2], `gui` [15]) and asserting 100% (96/96) `x-methods` coverage across all CLI subcommands. Also fixed a clap flag collision in `src/commands/media.rs` where `MediaCmd::Store::url` (`--url`) collided with global `Cli::url`, renaming the subcommand flag to `--source-url` (`id = "source_url"`).
+> - **2.1**: Created `tests/mock_http_tests.rs` using `mockito::Server::new()` and `rpc_ok_mock` helper, with 3 integration tests exercising `AnkiClient` and `execute_plan`: `jsonrpc_envelope_and_bearer_auth_header` (verifying `Authorization: Bearer secret-token`, `Content-Type: application/json`, JSON-RPC 2.0 envelope via `Cli::try_parse_from` + `to_rpc_plan` + `execute_plan`), `scope_aware_session_injected_for_collection_methods` (`decks.list`, `notes.get` receive `"session": "s-1"`), and `scope_aware_session_omitted_for_application_methods` (`operations.get`, `api.describe`, `profiles.list`, `access.requestPermission` omit `"session"`).
 
 > [!IMPORTANT]
 > ### Autonomous Execution Protocol: `"Continue with next task @plans/04_testing_and_docs_plan.md"`
@@ -123,7 +124,7 @@ Implement the three-layer automated integration and contract test suites (`tests
 
 ### Phase 2 — Mock HTTP Server Integration Tests (`tests/mock_http_tests.rs`)
 
-- [ ] **2.1 Create Mock HTTP Tests for Envelopes, Bearer Auth, and Scope-Aware Session Injection**
+- [x] **2.1 Create Mock HTTP Tests for Envelopes, Bearer Auth, and Scope-Aware Session Injection**
   - **File(s)**: `tests/mock_http_tests.rs`
   - **Scope**:
     - Create `tests/mock_http_tests.rs` using `mockito::Server::new()`.
