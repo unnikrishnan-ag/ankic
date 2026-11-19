@@ -5,11 +5,11 @@ Implement the three-layer automated integration and contract test suites (`tests
 
 ### Implementation Status
 - [x] **Phase 1 — Schema Contract Test Suite (`tests/schema_contract_tests.rs`) (`1.1`–`1.3`)**
-- [ ] **Phase 2 — Mock HTTP Server Integration Tests (`tests/mock_http_tests.rs`) (`2.1`–`2.3`)**
+- [x] **Phase 2 — Mock HTTP Server Integration Tests (`tests/mock_http_tests.rs`) (`2.1`–`2.3`)**
 - [ ] **Phase 3 — CLI Binary End-to-End Tests & Documentation (`3.1`–`3.2`)**
 
 ### Handoff Context (Updated After Each Task)
-> **Next task**: `2.3` (Add Mock HTTP Tests for Batch Execution & Deterministic Error Mapping)
+> **Next task**: `3.1` (Create Compiled Binary End-to-End Tests in `tests/cli_e2e_tests.rs`)
 >
 > **Context from completed tasks**:
 > - **1.1**: Created `tests/schema_contract_tests.rs` with `ROOT_SCHEMA` and `METHOD_VALIDATORS` (`jsonschema::draft202012::new` compiled for every `x-methods.<method>.params` and `x-methods.<method>.request` with `$defs`), `validate_rpc_contract(method: &str, raw_params: &Value) -> Result<(), String>` (validates both no-session and scope-aware `--session "test-session"` modes, plus `anki_skill::schema::validate_method_params`), and `assert_cli_args_conform(args: &[&str]) -> Vec<String>` (handling `RpcPlan::Local`, `Call`, `Paginate`, `WaitOperation`, and `Batch` in `Execute`/`Transport` modes). Added self-tests `schema_x_examples_pass_contract_validation` (16 examples) and `schema_x_invalid_examples_are_rejected` (17 invalid examples).
@@ -17,6 +17,7 @@ Implement the three-layer automated integration and contract test suites (`tests
 > - **1.3**: Added `extended_domain_cli_cases()`, `extended_domain_subcommands_conform_to_schema`, and `all_96_schema_methods_covered_by_cli_subcommands` in `tests/schema_contract_tests.rs`, covering all 43 extended domain methods (`media` [5], `packages` [2], `scheduling` [9], `reviews` [2], `statistics` [4], `profiles` [3], `access` [1], `advanced` [2], `gui` [15]) and asserting 100% (96/96) `x-methods` coverage across all CLI subcommands. Also fixed a clap flag collision in `src/commands/media.rs` where `MediaCmd::Store::url` (`--url`) collided with global `Cli::url`, renaming the subcommand flag to `--source-url` (`id = "source_url"`).
 > - **2.1**: Created `tests/mock_http_tests.rs` using `mockito::Server::new()` and `rpc_ok_mock` helper, with 3 integration tests exercising `AnkiClient` and `execute_plan`: `jsonrpc_envelope_and_bearer_auth_header` (verifying `Authorization: Bearer secret-token`, `Content-Type: application/json`, JSON-RPC 2.0 envelope via `Cli::try_parse_from` + `to_rpc_plan` + `execute_plan`), `scope_aware_session_injected_for_collection_methods` (`decks.list`, `notes.get` receive `"session": "s-1"`), and `scope_aware_session_omitted_for_application_methods` (`operations.get`, `api.describe`, `profiles.list`, `access.requestPermission` omit `"session"`).
 > - **2.2**: Added 5 mock HTTP tests in `tests/mock_http_tests.rs` using `AnkiClient::with_poll_delays(10ms, 25ms)`: `paginate_all_notes_and_cards_search_across_three_pages` (3-page cursor auto-pagination for `notes search ... --limit 2 --all` and `cards search ... --all`), `async_operation_polls_pending_running_to_succeeded` (verifying `collection.sync` -> `pending`/`running`/`succeeded` polling without `"session"` on `operations.get`), `async_operation_no_wait_returns_handle_immediately`, `async_operation_failed_and_cancelled_return_exit_code_4` (`CliError::OperationFailed` with exit code 4 and structured error details), and `async_operation_polling_timeout_returns_exit_code_5` (`CliError::Timeout` with exit code 5).
+> - **2.3**: Added 5 mock HTTP tests in `tests/mock_http_tests.rs` completing Phase 2 (13 tests total): `batch_execute_mode_calls_api_execute_and_polls_operation` (verifying `batch --mode execute --commands ...` calls `api.execute` without top-level `"session"` while injecting `"session": "s-1"` into collection-scoped inner commands, then polls `operations.get` to `succeeded`), `batch_transport_mode_sends_jsonrpc_array_batch` (verifying `batch --mode transport --commands ...` sends a JSON-RPC array with scope-aware session injection per item), `http_401_and_403_map_to_exit_code_3` (`CliError::HttpStatus`, `error.kind == "http"`), `jsonrpc_error_1003_editor_conflict_maps_to_exit_code_4` (`CliError::Rpc`, `code == 1003`, `data.type == "editorConflict"`), and `preflight_schema_validation_rejects_invalid_params_with_exit_code_2_before_http` (verifying invalid params and unknown methods fail with exit code 2 and 0 HTTP requests, while `--no-validate` bypasses validation and sends the request).
 
 > [!IMPORTANT]
 > ### Autonomous Execution Protocol: `"Continue with next task @plans/04_testing_and_docs_plan.md"`
@@ -169,7 +170,7 @@ Implement the three-layer automated integration and contract test suites (`tests
         - Poll with a tight timeout and millisecond poll interval; assert `CliError::Timeout` is returned with `err.exit_code() == 5`.
   - **Verify**: `cargo test --test mock_http_tests` and `cargo clippy --all-targets -- -D warnings`
 
-- [ ] **2.3 Add Mock HTTP Tests for Batch Execution & Deterministic Error Mapping**
+- [x] **2.3 Add Mock HTTP Tests for Batch Execution & Deterministic Error Mapping**
   - **File(s)**: `tests/mock_http_tests.rs`
   - **Scope**:
     - Add batch execution tests:
