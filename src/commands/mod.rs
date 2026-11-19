@@ -6,6 +6,7 @@ use crate::error::CliError;
 use crate::output::OutputFormat;
 use crate::schema;
 
+pub mod cards;
 pub mod collection;
 pub mod deck_presets;
 pub mod decks;
@@ -13,6 +14,7 @@ pub mod helpers;
 pub mod notes;
 pub mod operations;
 
+pub use cards::CardsCmd;
 pub use collection::CollectionCmd;
 pub use deck_presets::DeckPresetsCmd;
 pub use decks::DecksCmd;
@@ -158,48 +160,6 @@ pub struct SchemaArgs {
     pub errors: bool,
 }
 
-#[derive(Subcommand)]
-pub enum CardsCmd {
-    /// Get a card by ID
-    Get { id: String },
-    /// Search cards using Anki query syntax
-    Search {
-        #[arg(default_value = "")]
-        query: String,
-        #[arg(long, default_value_t = 100)]
-        limit: u64,
-        #[arg(long)]
-        cursor: Option<String>,
-        /// Auto-paginate through all matching IDs
-        #[arg(long)]
-        all: bool,
-    },
-    /// Move cards to a target deck
-    Move {
-        #[arg(long)]
-        deck: String,
-        #[arg(required = true)]
-        ids: Vec<String>,
-    },
-    /// Suspend cards
-    Suspend {
-        #[arg(required = true)]
-        ids: Vec<String>,
-    },
-    /// Unsuspend cards
-    Unsuspend {
-        #[arg(required = true)]
-        ids: Vec<String>,
-    },
-    /// Set user flag (0 = none, 1..7 = flag colors)
-    Flags {
-        #[arg(long)]
-        flag: u8,
-        #[arg(required = true)]
-        ids: Vec<String>,
-    },
-}
-
 #[derive(Args)]
 pub struct BatchArgs {
     /// Path to a YAML or JSON file containing an array of {method, params} objects
@@ -276,30 +236,6 @@ fn call_plan(method: impl Into<String>, params: Value) -> RpcPlan {
     }
 }
 
-fn search_plan(
-    method: &str,
-    query: &str,
-    limit: u64,
-    cursor: Option<&str>,
-    all: bool,
-) -> RpcPlan {
-    let mut params = Map::new();
-    params.insert("query".into(), json!(query));
-    params.insert("limit".into(), json!(limit));
-    if let Some(c) = cursor {
-        params.insert("cursor".into(), json!(c));
-    }
-    if all {
-        RpcPlan::Paginate {
-            method: method.into(),
-            params,
-            array_key: "ids",
-        }
-    } else {
-        call_plan(method, Value::Object(params))
-    }
-}
-
 /// Translate a parsed CLI command into an `RpcPlan` without performing network I/O.
 pub fn to_rpc_plan(cmd: &Commands) -> Result<RpcPlan, CliError> {
     match cmd {
@@ -327,37 +263,7 @@ pub fn to_rpc_plan(cmd: &Commands) -> Result<RpcPlan, CliError> {
         Commands::Decks { command } => decks::to_rpc_plan(command),
         Commands::DeckPresets { command } => deck_presets::to_rpc_plan(command),
         Commands::Notes { command } => notes::to_rpc_plan(command),
-        Commands::Cards { command } => match command {
-            CardsCmd::Get { id } => Ok(call_plan("cards.get", json!({ "id": id }))),
-            CardsCmd::Search {
-                query,
-                limit,
-                cursor,
-                all,
-            } => Ok(search_plan(
-                "cards.search",
-                query,
-                *limit,
-                cursor.as_deref(),
-                *all,
-            )),
-            CardsCmd::Move { deck, ids } => Ok(call_plan(
-                "cards.move",
-                json!({ "ids": ids, "deck": { "name": deck } }),
-            )),
-            CardsCmd::Suspend { ids } => Ok(call_plan(
-                "cards.setSuspended",
-                json!({ "ids": ids, "suspended": true }),
-            )),
-            CardsCmd::Unsuspend { ids } => Ok(call_plan(
-                "cards.setSuspended",
-                json!({ "ids": ids, "suspended": false }),
-            )),
-            CardsCmd::Flags { flag, ids } => Ok(call_plan(
-                "cards.setFlags",
-                json!({ "ids": ids, "flag": flag }),
-            )),
-        },
+        Commands::Cards { command } => cards::to_rpc_plan(command),
         Commands::Operations { command } => operations::to_rpc_plan(command),
         Commands::Batch(args) => {
             let requests = parse_batch_requests(args)?;

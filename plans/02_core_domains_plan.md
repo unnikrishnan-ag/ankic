@@ -10,7 +10,7 @@ Modularize `src/commands/` into clean domain files and expand the core Anki doma
 - [ ] **Phase 4 — Complete `note-types` Domain (All 8 Methods) (`4.1`–`4.2`)**
 
 ### Handoff Context (Updated After Each Task)
-> **Next task**: `3.1` (Extract & Complete `cards` Domain (`src/commands/cards.rs`))
+> **Next task**: `3.2` (Implement `tags` Domain (`src/commands/tags.rs`))
 >
 > **Context from completed tasks**:
 > - **1.1**: Created `src/commands/helpers.rs` (`call_plan`, `make_ref`, `make_refs`, `make_sort`, `parse_yaml_or_json_value`, `parse_yaml_or_json_object`, `parse_yaml_or_json_array`, `read_input_or_stdin`), `src/commands/collection.rs` (`CollectionCmd`, `to_rpc_plan` covering `collection.get`, `collection.sync`, `collection.refresh`, `collection.checkIntegrity`, `collection.undo`), and `src/commands/operations.rs` (`OperationsCmd`, `to_rpc_plan` covering `operations.get`, `operations.cancel`, `RpcPlan::WaitOperation`). Wired `helpers`, `collection`, and `operations` into `src/commands/mod.rs` with `pub use collection::CollectionCmd; pub use operations::OperationsCmd;`.
@@ -19,6 +19,7 @@ Modularize `src/commands/` into clean domain files and expand the core Anki doma
 > - **2.1**: Created `src/commands/notes.rs` (`NotesCmd`, `to_rpc_plan`) covering `notes.get`, `notes.getMany` (`get-many`), `notes.search` (with `--sort-by`/`--sort-dir` and `--all` pagination), `notes.findEmpty` (`find-empty` with `--criterion`, optional `--query`, and `--all` pagination), `notes.validate` (wrapping `NoteInput` under `"note"`, supporting `--deck`/`--deck-id`, `--note-type`/`--note-type-id`, `--allow-duplicates`, `--reject-empty-questions`), and `notes.validateMany` (`validate-many` with `--notes`/`--items` or `--stdin`), while preserving existing `Create`/`Update`/`Delete` variants. Wired `pub mod notes; pub use notes::NotesCmd;` into `src/commands/mod.rs`.
 > - **2.2**: Enhanced `NotesCmd::Create` (`--deck`/`--deck-id`, `--note-type`/`--note-type-id`, YAML/JSON `--fields`, `--tag`, `--allow-duplicates`, `--duplicate-scope`, `--duplicate-deck`/`--duplicate-deck-id`, `--reject-empty-questions`), added `NotesCmd::CreateMany` (`create-many` with `--notes`/`--items` or `--stdin`, `--atomic`), and added shared `build_note_input` helper in `src/commands/notes.rs` alongside unit tests for `notes.create`, `notes.createMany`, `notes.update`, and `notes.delete`.
 > - **2.3**: Added `NotesCmd::PlanConversion` (`plan-conversion` -> `notes.planConversion` with `--source-name`/`--source-id` and `--target-name`/`--target-id`) and `NotesCmd::Convert` (`convert` -> `notes.convert` with positional `ids`, `--target-name`/`--target-id`, YAML/JSON `--fields` and `--templates` arrays of `ConversionMapping`, and `--plan-token`) in `src/commands/notes.rs`, plus unit tests validating both methods against `schemas/api-v1.schema.json`.
+> - **3.1**: Extracted and completed `CardsCmd` and `to_rpc_plan` in `src/commands/cards.rs` covering all 7 `cards.*` methods (`cards.get`, `cards.getMany` via `get-many`, `cards.search` with `--sort-by`/`--sort-dir` and `--all` pagination, `cards.render`, `cards.move` with `--deck`/`--deck-id`, `cards.setSuspended` via `suspend`/`unsuspend`, and `cards.setFlags` with `0..=7` validation), wired `pub mod cards; pub use cards::CardsCmd;` into `src/commands/mod.rs` (removing inline `CardsCmd` and unused `search_plan`), and added unit tests validating all 7 methods against `schemas/api-v1.schema.json`.
 
 > [!IMPORTANT]
 > ### Autonomous Execution Protocol: `"Continue with next task @plans/02_core_domains_plan.md"`
@@ -172,7 +173,7 @@ Modularize `src/commands/` into clean domain files and expand the core Anki doma
 
 ### Phase 3 — Complete `cards` & `tags` Domains (12 Methods)
 
-- [ ] **3.1 Extract & Complete `cards` Domain (`src/commands/cards.rs`)**
+- [x] **3.1 Extract & Complete `cards` Domain (`src/commands/cards.rs`)**
   - **File(s)**:
     - `src/commands/cards.rs` (new)
     - `src/commands/mod.rs` (modify)
