@@ -16,6 +16,7 @@ pub mod note_types;
 pub mod notes;
 pub mod operations;
 pub mod packages;
+pub mod scheduling;
 pub mod tags;
 
 pub use cards::CardsCmd;
@@ -27,6 +28,7 @@ pub use note_types::NoteTypesCmd;
 pub use notes::NotesCmd;
 pub use operations::OperationsCmd;
 pub use packages::PackagesCmd;
+pub use scheduling::SchedulingCmd;
 pub use tags::TagsCmd;
 
 #[derive(Parser)]
@@ -145,6 +147,12 @@ pub enum Commands {
     Packages {
         #[command(subcommand)]
         command: PackagesCmd,
+    },
+
+    /// Card scheduling inspection and review commands
+    Scheduling {
+        #[command(subcommand)]
+        command: SchedulingCmd,
     },
 
     /// Async operation tracking (get, wait, cancel)
@@ -301,6 +309,7 @@ pub fn to_rpc_plan(cmd: &Commands) -> Result<RpcPlan, CliError> {
         Commands::NoteTypes { command } => note_types::to_rpc_plan(command),
         Commands::Media { command } => media::to_rpc_plan(command),
         Commands::Packages { command } => packages::to_rpc_plan(command),
+        Commands::Scheduling { command } => scheduling::to_rpc_plan(command),
         Commands::Operations { command } => operations::to_rpc_plan(command),
         Commands::Batch(args) => {
             let requests = parse_batch_requests(args)?;

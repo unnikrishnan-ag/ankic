@@ -10,11 +10,12 @@ Implement first-class, schema-validated CLI subcommands for all 12 remaining Ank
 - [ ] **Phase 4 — GUI Subcommands (`application`, `browser`, `editors`, `reviewer`) (`4.1`–`4.2`)**
 
 ### Handoff Context (Updated After Each Task)
-> **Next task**: `2.1` (Implement `scheduling` Inspection Subcommands in `src/commands/scheduling.rs`)
+> **Next task**: `2.2` (Add `scheduling` Mutation Subcommands in `src/commands/scheduling.rs`)
 >
 > **Context from completed tasks**:
 > - **Task 1.1 (`src/commands/media.rs`, `src/commands/mod.rs`)**: Implemented `MediaCmd` (`List`, `Get`, `Store`, `Delete`, `Directory`) and `pub fn to_rpc_plan(cmd: &MediaCmd) -> Result<RpcPlan, CliError>` covering all 5 `media.*` methods (`media.list`, `media.get`, `media.store`, `media.delete`, `media.getDirectory`), wired into `Commands::Media` (`pub use media::MediaCmd`). `Store` enforces mutually exclusive `--data` (alias `--data-base64`) / `--path` / `--url`, optional `--collision` (`rename|replace|error`), paired `--skip-hash-alg` (`md5|sha256`) + `--skip-hash-digest`, and `--no-wait`/`--timeout` (`wait: !no_wait`, default `300`). Unit tests validate all 5 methods and error cases against `schema::validate_method_params`.
 > - **Task 1.2 (`src/commands/packages.rs`, `src/commands/mod.rs`)**: Implemented `PackagesCmd` (`Import`, `Export`) and `pub fn to_rpc_plan(cmd: &PackagesCmd) -> Result<RpcPlan, CliError>` covering both `packages.*` operation methods (`packages.import`, `packages.export`), wired into `Commands::Packages` (`pub use packages::PackagesCmd`). `Import` takes positional `path` with `--no-wait`/`--timeout` (default `300`); `Export` takes `--name` (aliases `--deck-name`, `--deck`) / `--id` (alias `--deck-id`) via `helpers::make_ref`, `--path`, `--include-scheduling`, and `--no-wait`/`--timeout` (default `300`). Unit tests validate both methods against `schema::validate_method_params` as well as missing deck reference and empty path errors.
+> - **Task 2.1 (`src/commands/scheduling.rs`, `src/commands/mod.rs`)**: Implemented `SchedulingCmd` (`Get`, `Queue`, `Predict`, `Due`) and `pub fn to_rpc_plan(cmd: &SchedulingCmd) -> Result<RpcPlan, CliError>` covering the 4 `scheduling.*` inspection methods (`scheduling.get`, `scheduling.getQueue`, `scheduling.predict`, `scheduling.getDue`), wired into `Commands::Scheduling` (`pub use scheduling::SchedulingCmd`). `Queue` validates optional `--fetch-limit` in `1..=1000` and omits `fetchLimit` when `None`; `Due` passes `cardId` and `includeLearnAhead` (`--include-learn-ahead`, default `false`). Unit tests validate all 4 methods and `fetchLimit` bounds against `schema::validate_method_params`.
 
 > [!IMPORTANT]
 > ### Autonomous Execution Protocol: `"Continue with next task @plans/03_extended_domains_plan.md"`
@@ -83,7 +84,7 @@ Implement first-class, schema-validated CLI subcommands for all 12 remaining Ank
 
 ### Phase 2 — Scheduling & Reviews Subcommands
 
-- [ ] **2.1 Implement `scheduling` Inspection Subcommands (`src/commands/scheduling.rs`)**
+- [x] **2.1 Implement `scheduling` Inspection Subcommands (`src/commands/scheduling.rs`)**
   - **File(s)**:
     - `src/commands/scheduling.rs` (new)
     - `src/commands/mod.rs` (modify)
