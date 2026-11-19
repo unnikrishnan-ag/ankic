@@ -10,10 +10,10 @@ Implement first-class, schema-validated CLI subcommands for all 12 remaining Ank
 - [ ] **Phase 4 — GUI Subcommands (`application`, `browser`, `editors`, `reviewer`) (`4.1`–`4.2`)**
 
 ### Handoff Context (Updated After Each Task)
-> **Next task**: `1.1` (Implement `media` Domain Subcommands in `src/commands/media.rs`)
+> **Next task**: `1.2` (Implement `packages` Domain Subcommands in `src/commands/packages.rs`)
 >
 > **Context from completed tasks**:
-> - *(None yet — after each task, record created/modified file paths, exact symbol/type/method signatures, config/settings keys, and any caveats so a fresh conversation can continue without re-discovering them.)*
+> - **Task 1.1 (`src/commands/media.rs`, `src/commands/mod.rs`)**: Implemented `MediaCmd` (`List`, `Get`, `Store`, `Delete`, `Directory`) and `pub fn to_rpc_plan(cmd: &MediaCmd) -> Result<RpcPlan, CliError>` covering all 5 `media.*` methods (`media.list`, `media.get`, `media.store`, `media.delete`, `media.getDirectory`), wired into `Commands::Media` (`pub use media::MediaCmd`). `Store` enforces mutually exclusive `--data` (alias `--data-base64`) / `--path` / `--url`, optional `--collision` (`rename|replace|error`), paired `--skip-hash-alg` (`md5|sha256`) + `--skip-hash-digest`, and `--no-wait`/`--timeout` (`wait: !no_wait`, default `300`). Unit tests validate all 5 methods and error cases against `schema::validate_method_params`.
 
 > [!IMPORTANT]
 > ### Autonomous Execution Protocol: `"Continue with next task @plans/03_extended_domains_plan.md"`
@@ -41,7 +41,7 @@ Implement first-class, schema-validated CLI subcommands for all 12 remaining Ank
 
 ### Phase 1 — Media & Packages Subcommands
 
-- [ ] **1.1 Implement `media` Domain Subcommands (`src/commands/media.rs`)**
+- [x] **1.1 Implement `media` Domain Subcommands (`src/commands/media.rs`)**
   - **File(s)**:
     - `src/commands/media.rs` (new)
     - `src/commands/mod.rs` (modify)
