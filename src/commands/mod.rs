@@ -11,6 +11,7 @@ pub mod collection;
 pub mod deck_presets;
 pub mod decks;
 pub mod helpers;
+pub mod note_types;
 pub mod notes;
 pub mod operations;
 pub mod tags;
@@ -19,6 +20,7 @@ pub use cards::CardsCmd;
 pub use collection::CollectionCmd;
 pub use deck_presets::DeckPresetsCmd;
 pub use decks::DecksCmd;
+pub use note_types::NoteTypesCmd;
 pub use notes::NotesCmd;
 pub use operations::OperationsCmd;
 pub use tags::TagsCmd;
@@ -120,6 +122,13 @@ pub enum Commands {
     Tags {
         #[command(subcommand)]
         command: TagsCmd,
+    },
+
+    /// Note type commands (list, get, create, update, template-usage)
+    #[command(name = "note-types")]
+    NoteTypes {
+        #[command(subcommand)]
+        command: NoteTypesCmd,
     },
 
     /// Async operation tracking (get, wait, cancel)
@@ -273,6 +282,7 @@ pub fn to_rpc_plan(cmd: &Commands) -> Result<RpcPlan, CliError> {
         Commands::Notes { command } => notes::to_rpc_plan(command),
         Commands::Cards { command } => cards::to_rpc_plan(command),
         Commands::Tags { command } => tags::to_rpc_plan(command),
+        Commands::NoteTypes { command } => note_types::to_rpc_plan(command),
         Commands::Operations { command } => operations::to_rpc_plan(command),
         Commands::Batch(args) => {
             let requests = parse_batch_requests(args)?;
