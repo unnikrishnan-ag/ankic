@@ -16,8 +16,10 @@ pub mod note_types;
 pub mod notes;
 pub mod operations;
 pub mod packages;
+pub mod profiles;
 pub mod reviews;
 pub mod scheduling;
+pub mod statistics;
 pub mod tags;
 
 pub use cards::CardsCmd;
@@ -29,8 +31,10 @@ pub use note_types::NoteTypesCmd;
 pub use notes::NotesCmd;
 pub use operations::OperationsCmd;
 pub use packages::PackagesCmd;
+pub use profiles::ProfilesCmd;
 pub use reviews::ReviewsCmd;
 pub use scheduling::SchedulingCmd;
+pub use statistics::StatisticsCmd;
 pub use tags::TagsCmd;
 
 #[derive(Parser)]
@@ -161,6 +165,18 @@ pub enum Commands {
     Reviews {
         #[command(subcommand)]
         command: ReviewsCmd,
+    },
+
+    /// Study statistics commands (today, review-days, summary, html)
+    Statistics {
+        #[command(subcommand)]
+        command: StatisticsCmd,
+    },
+
+    /// User profile commands (list, active, switch)
+    Profiles {
+        #[command(subcommand)]
+        command: ProfilesCmd,
     },
 
     /// Async operation tracking (get, wait, cancel)
@@ -319,6 +335,8 @@ pub fn to_rpc_plan(cmd: &Commands) -> Result<RpcPlan, CliError> {
         Commands::Packages { command } => packages::to_rpc_plan(command),
         Commands::Scheduling { command } => scheduling::to_rpc_plan(command),
         Commands::Reviews { command } => reviews::to_rpc_plan(command),
+        Commands::Statistics { command } => statistics::to_rpc_plan(command),
+        Commands::Profiles { command } => profiles::to_rpc_plan(command),
         Commands::Operations { command } => operations::to_rpc_plan(command),
         Commands::Batch(args) => {
             let requests = parse_batch_requests(args)?;
