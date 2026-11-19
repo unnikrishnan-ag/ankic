@@ -1,8 +1,8 @@
 # anki-skill (`anki-cli`)
 
-A Rust CLI for [Anki-Connect API v1](../anki-connect/API_V1.md) (`POST /api/v1`), built for **100% API coverage** and **LLM agent skill** usage.
+A Rust CLI for [Anki-Connect API v1](../anki-connect/API_V1.md) (`POST /api/v1`), built for **100% API coverage** (all 96 methods across 21 namespaces) and **LLM agent skill** usage.
 
-## Build
+## Build & Test
 
 Requires Rust (1.75+ / 2021 edition):
 
@@ -10,39 +10,66 @@ Requires Rust (1.75+ / 2021 edition):
 cargo build --release
 ```
 
-The binary is at `target/release/anki-cli`.
+The compiled binary is at `target/release/anki-cli`.
+
+Run the full test suite (unit, schema contract, mock HTTP, and compiled binary E2E tests):
+
+```bash
+cargo test --all-targets
+cargo clippy --all-targets -- -D warnings
+```
 
 ## Features
 
-- **JSON-first output:** Compact JSON on stdout by default (use `--pretty` for human-readable output) and structured JSON errors on stderr with categorized exit codes (`2` = input/schema, `3` = transport/HTTP, `4` = RPC/operation failure, `5` = timeout).
-- **Offline schema introspection (`schema`):** Embeds `schemas/api-v1.schema.json` so agents can inspect any of the 96 V1 methods and their parameter/result schemas without bloating prompts.
-- **100% API coverage (`call`):** Raw JSON-RPC escape hatch for any method (`anki-cli call <method> --params '{...}'`), with automatic `OperationHandle` polling unless `--no-wait` is passed.
-- **Ergonomic subcommands:** `collection`, `decks`, `notes`, `cards`, `operations`, and `describe`, including `--all` auto-pagination on search commands.
+- **YAML-by-default output:** Clean, token-efficient YAML on `stdout` and `stderr` by default, with `--format <yaml|json|json-pretty>` (and `--json` / `--pretty` aliases) when JSON is needed.
+- **YAML & JSON parameter inputs:** `--params`, `--fields`, `--stdin`, and `batch` inputs (`--commands`, `--file`, `--stdin`) accept both YAML and JSON interchangeably.
+- **Pre-flight schema validation:** Validates parameters and method names client-side against the embedded `schemas/api-v1.schema.json` before sending HTTP requests (fail-fast exit code `2`; bypass with `--no-validate`).
+- **Scope-aware session handling:** Automatically injects `--session` / `ANKI_CONNECT_SESSION` only into `scope: "collection"` methods and omits it on `scope: "application"` methods (e.g., `operations.get`, `api.describe`, `api.execute`, `profiles.*`).
+- **Offline schema introspection (`schema`):** Inspect all 96 V1 methods, parameter/result schemas, and error codes offline without a running Anki instance.
+- **Complete subcommand coverage (96/96 methods across 21 namespaces):** Ergonomic subcommands for `collection`, `decks`, `deck-presets`, `notes`, `cards`, `note-types`, `tags`, `media`, `scheduling`, `reviews`, `statistics`, `profiles`, `packages`, `access`, `advanced`, `gui` (`browser`, `editors`, `reviewer`, `application`), and `operations`, plus `--all` cursor auto-pagination on search commands and automatic `OperationHandle` polling (unless `--no-wait` is passed).
+- **Batch & raw escape hatches (`batch`, `call`, `describe`):** Run multi-command batches via `api.execute` (`--mode execute`) or JSON-RPC array batching (`--mode transport`), or invoke any method directly with `call`.
+- **Deterministic exit codes:** `0` = success, `2` = CLI / input / pre-flight validation error, `3` = transport / HTTP error, `4` = JSON-RPC or failed/cancelled operation, `5` = operation polling timeout.
 
 ## Configuration
 
-| Flag | Env Var | Default |
-| --- | --- | --- |
-| `--url` | `ANKI_CONNECT_URL` | `http://127.0.0.1:8765/api/v1` |
-| `--api-key` | `ANKI_CONNECT_API_KEY` | unset |
-| `--session` | `ANKI_CONNECT_SESSION` | unset |
+| Flag | Env Var | Default | Description |
+| --- | --- | --- | --- |
+| `--url` | `ANKI_CONNECT_URL` | `http://127.0.0.1:8765/api/v1` | Anki-Connect v1 JSON-RPC endpoint |
+| `--api-key` | `ANKI_CONNECT_API_KEY` | unset | Bearer token (`Authorization: Bearer <key>`) |
+| `--session` | `ANKI_CONNECT_SESSION` | unset | Collection session ID from `collection get` |
+| `-f, --format` | — | `yaml` | Output format: `yaml`, `json`, or `json-pretty` |
+| `--json` | — | `false` | Alias for `--format json` |
+| `--pretty` | — | `false` | Alias for `--format json-pretty` |
+| `--no-validate` | — | `false` | Bypass client-side pre-flight schema validation |
 
 ## Examples
 
 ```bash
-# List all available V1 methods offline
+# List all 96 V1 methods offline (YAML output by default)
 anki-cli schema
 
-# Inspect exact parameter/result schema for a method
+# Inspect a method's schema in pretty JSON
 anki-cli schema notes.create --pretty
 
-# Check active collection & session
+# Check active collection & capture session
 anki-cli collection get
 
-# Search notes (auto-paginating)
+# Create a note using inline YAML --fields
+anki-cli notes create --deck Default --note-type Basic --fields $'Front: 猫\nBack: cat'
+
+# Search notes with cursor auto-pagination across all pages
 anki-cli notes search "deck:Default" --all
 
-# Call any V1 method directly (waits for async operations by default)
+# Execute a sequential batch via api.execute (polls OperationHandle automatically)
+anki-cli batch --mode execute --commands '
+- method: decks.create
+  params:
+    name: Japanese::Vocab
+- method: collection.sync
+  params: {}
+'
+
+# Call any V1 method directly with YAML or JSON --params
 anki-cli call statistics.getToday
 anki-cli call packages.export --params '{"deck":{"name":"Default"},"path":"/tmp/out.apkg"}'
 ```
