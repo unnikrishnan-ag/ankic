@@ -9,10 +9,10 @@ Implement the three-layer automated integration and contract test suites (`tests
 - [ ] **Phase 3 — CLI Binary End-to-End Tests & Documentation (`3.1`–`3.2`)**
 
 ### Handoff Context (Updated After Each Task)
-> **Next task**: `1.1` (Create Draft 2020-12 Schema Validation Harness in `tests/schema_contract_tests.rs`)
+> **Next task**: `1.2` (Add Core Domain Subcommand CLI-to-Schema Contract Tests)
 >
 > **Context from completed tasks**:
-> - *(None yet — after each task, record created/modified file paths, exact symbol/type/method signatures, config/settings keys, and any caveats so a fresh conversation can continue without re-discovering them.)*
+> - **1.1**: Created `tests/schema_contract_tests.rs` with `ROOT_SCHEMA` and `METHOD_VALIDATORS` (`jsonschema::draft202012::new` compiled for every `x-methods.<method>.params` and `x-methods.<method>.request` with `$defs`), `validate_rpc_contract(method: &str, raw_params: &Value) -> Result<(), String>` (validates both no-session and scope-aware `--session "test-session"` modes, plus `anki_skill::schema::validate_method_params`), and `assert_cli_args_conform(args: &[&str]) -> Vec<String>` (handling `RpcPlan::Local`, `Call`, `Paginate`, `WaitOperation`, and `Batch` in `Execute`/`Transport` modes). Added self-tests `schema_x_examples_pass_contract_validation` (16 examples) and `schema_x_invalid_examples_are_rejected` (17 invalid examples).
 
 > [!IMPORTANT]
 > ### Autonomous Execution Protocol: `"Continue with next task @plans/04_testing_and_docs_plan.md"`
@@ -39,7 +39,7 @@ Implement the three-layer automated integration and contract test suites (`tests
 
 ### Phase 1 — Schema Contract Test Suite (`tests/schema_contract_tests.rs`)
 
-- [ ] **1.1 Create Draft 2020-12 Schema Validation Harness in `tests/schema_contract_tests.rs`**
+- [x] **1.1 Create Draft 2020-12 Schema Validation Harness in `tests/schema_contract_tests.rs`**
   - **File(s)**: `tests/schema_contract_tests.rs`
   - **Scope**:
     - Load `schemas/api-v1.schema.json` once in the test module (`serde_json::from_str(include_str!("../schemas/api-v1.schema.json"))`).
