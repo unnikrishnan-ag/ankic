@@ -1,5 +1,8 @@
+use std::time::Duration;
+
 use anki_skill::client::AnkiClient;
 use anki_skill::commands::{execute_plan, to_rpc_plan, Cli};
+use anki_skill::error::CliError;
 use clap::Parser;
 use mockito::{Matcher, Mock, Server};
 use serde_json::{json, Value};
@@ -180,4 +183,260 @@ fn scope_aware_session_omitted_for_application_methods() {
     describe_mock.assert();
     profiles_mock.assert();
     access_mock.assert();
+}
+
+#[test]
+fn paginate_all_notes_and_cards_search_across_three_pages() {
+    let mut server = Server::new();
+    let client = AnkiClient::new(server.url(), None, Some("s-1".into())).expect("client init");
+
+    // 1. notes.search across 3 pages
+    let notes_p1 = rpc_ok_mock(
+        &mut server,
+        "notes.search",
+        json!({ "query": "deck:Default", "limit": 2, "session": "s-1" }),
+        json!({ "ids": ["101", "102"], "nextCursor": "cur-2" }),
+    );
+    let notes_p2 = rpc_ok_mock(
+        &mut server,
+        "notes.search",
+        json!({ "query": "deck:Default", "limit": 2, "cursor": "cur-2", "session": "s-1" }),
+        json!({ "ids": ["103", "104"], "nextCursor": "cur-3" }),
+    );
+    let notes_p3 = rpc_ok_mock(
+        &mut server,
+        "notes.search",
+        json!({ "query": "deck:Default", "limit": 2, "cursor": "cur-3", "session": "s-1" }),
+        json!({ "ids": ["105"], "nextCursor": null }),
+    );
+
+    let cli = Cli::try_parse_from(["anki-cli", "notes", "search", "deck:Default", "--limit", "2", "--all"])
+        .expect("parse notes search");
+    let plan = to_rpc_plan(&cli.command).expect("build notes search plan");
+    let notes_result = execute_plan(&client, plan).expect("execute notes.search --all");
+    assert_eq!(
+        notes_result,
+        json!({
+            "ids": ["101", "102", "103", "104", "105"],
+            "pages": 3,
+            "total": 5,
+        })
+    );
+    notes_p1.assert();
+    notes_p2.assert();
+    notes_p3.assert();
+
+    // 2. cards.search across 3 pages
+    let cards_p1 = rpc_ok_mock(
+        &mut server,
+        "cards.search",
+        json!({ "query": "is:due", "limit": 100, "session": "s-1" }),
+        json!({ "ids": ["201", "202"], "nextCursor": "cur-2" }),
+    );
+    let cards_p2 = rpc_ok_mock(
+        &mut server,
+        "cards.search",
+        json!({ "query": "is:due", "limit": 100, "cursor": "cur-2", "session": "s-1" }),
+        json!({ "ids": ["203", "204"], "nextCursor": "cur-3" }),
+    );
+    let cards_p3 = rpc_ok_mock(
+        &mut server,
+        "cards.search",
+        json!({ "query": "is:due", "limit": 100, "cursor": "cur-3", "session": "s-1" }),
+        json!({ "ids": ["205"], "nextCursor": null }),
+    );
+
+    let cli = Cli::try_parse_from(["anki-cli", "cards", "search", "is:due", "--all"])
+        .expect("parse cards search");
+    let plan = to_rpc_plan(&cli.command).expect("build cards search plan");
+    let cards_result = execute_plan(&client, plan).expect("execute cards.search --all");
+    assert_eq!(
+        cards_result,
+        json!({
+            "ids": ["201", "202", "203", "204", "205"],
+            "pages": 3,
+            "total": 5,
+        })
+    );
+    cards_p1.assert();
+    cards_p2.assert();
+    cards_p3.assert();
+}
+
+#[test]
+fn async_operation_polls_pending_running_to_succeeded() {
+    let mut server = Server::new();
+    let client = AnkiClient::new(server.url(), None, Some("s-1".into()))
+        .expect("client init")
+        .with_poll_delays(Duration::from_millis(10), Duration::from_millis(25));
+
+    let sync_mock = rpc_ok_mock(
+        &mut server,
+        "collection.sync",
+        json!({ "session": "s-1" }),
+        json!({ "operationId": "op-sync-1", "method": "collection.sync", "session": "s-1" }),
+    );
+
+    // operations.get is application-scoped: must NOT receive "session"
+    let op_pending = rpc_ok_mock(
+        &mut server,
+        "operations.get",
+        json!({ "operationId": "op-sync-1" }),
+        json!({ "operationId": "op-sync-1", "method": "collection.sync", "state": "pending" }),
+    )
+    .expect(1);
+    let op_running = rpc_ok_mock(
+        &mut server,
+        "operations.get",
+        json!({ "operationId": "op-sync-1" }),
+        json!({ "operationId": "op-sync-1", "method": "collection.sync", "state": "running" }),
+    )
+    .expect(1);
+    let op_succeeded = rpc_ok_mock(
+        &mut server,
+        "operations.get",
+        json!({ "operationId": "op-sync-1" }),
+        json!({
+            "operationId": "op-sync-1",
+            "method": "collection.sync",
+            "state": "succeeded",
+            "result": { "collectionComplete": true, "mediaComplete": true }
+        }),
+    )
+    .expect(1);
+
+    let result = client
+        .call_and_maybe_wait("collection.sync", json!({}), true, 5)
+        .expect("poll operation to succeeded");
+    assert_eq!(
+        result,
+        json!({ "collectionComplete": true, "mediaComplete": true })
+    );
+
+    sync_mock.assert();
+    op_pending.assert();
+    op_running.assert();
+    op_succeeded.assert();
+}
+
+#[test]
+fn async_operation_no_wait_returns_handle_immediately() {
+    let mut server = Server::new();
+    let client = AnkiClient::new(server.url(), None, Some("s-1".into()))
+        .expect("client init")
+        .with_poll_delays(Duration::from_millis(10), Duration::from_millis(25));
+
+    let handle = json!({ "operationId": "op-sync-2", "method": "collection.sync", "session": "s-1" });
+    let sync_mock = rpc_ok_mock(
+        &mut server,
+        "collection.sync",
+        json!({ "session": "s-1" }),
+        handle.clone(),
+    );
+    let op_get_mock = server
+        .mock("POST", "/")
+        .match_body(Matcher::PartialJson(json!({ "method": "operations.get" })))
+        .expect(0)
+        .create();
+
+    let result = client
+        .call_and_maybe_wait("collection.sync", json!({}), false, 5)
+        .expect("no-wait returns handle");
+    assert_eq!(result, handle);
+
+    sync_mock.assert();
+    op_get_mock.assert();
+}
+
+#[test]
+fn async_operation_failed_and_cancelled_return_exit_code_4() {
+    let mut server = Server::new();
+    let client = AnkiClient::new(server.url(), None, Some("s-1".into()))
+        .expect("client init")
+        .with_poll_delays(Duration::from_millis(10), Duration::from_millis(25));
+
+    // Failed operation
+    let failed_mock = rpc_ok_mock(
+        &mut server,
+        "operations.get",
+        json!({ "operationId": "op-fail" }),
+        json!({
+            "operationId": "op-fail",
+            "method": "collection.sync",
+            "state": "failed",
+            "error": {
+                "code": 1012,
+                "message": "Network I/O error during sync",
+                "data": { "type": "ioError", "retryable": true }
+            }
+        }),
+    );
+
+    let err = client
+        .wait_for_operation("op-fail", 5)
+        .expect_err("failed operation should return error");
+    assert_eq!(err.exit_code(), 4);
+    assert!(matches!(err, CliError::OperationFailed { .. }));
+    let err_json = err.to_json();
+    assert_eq!(err_json["error"]["kind"], "operation");
+    assert_eq!(err_json["error"]["state"], "failed");
+    assert_eq!(err_json["error"]["details"]["code"], 1012);
+    assert_eq!(err_json["error"]["details"]["data"]["type"], "ioError");
+    failed_mock.assert();
+
+    // Cancelled operation
+    let cancelled_mock = rpc_ok_mock(
+        &mut server,
+        "operations.get",
+        json!({ "operationId": "op-cancel" }),
+        json!({
+            "operationId": "op-cancel",
+            "method": "collection.sync",
+            "state": "cancelled",
+            "error": {
+                "code": 1007,
+                "message": "Operation was cancelled",
+                "data": { "type": "cancelled" }
+            }
+        }),
+    );
+
+    let err = client
+        .wait_for_operation("op-cancel", 5)
+        .expect_err("cancelled operation should return error");
+    assert_eq!(err.exit_code(), 4);
+    assert!(matches!(err, CliError::OperationFailed { .. }));
+    let err_json = err.to_json();
+    assert_eq!(err_json["error"]["kind"], "operation");
+    assert_eq!(err_json["error"]["state"], "cancelled");
+    assert_eq!(err_json["error"]["details"]["code"], 1007);
+    assert_eq!(err_json["error"]["details"]["data"]["type"], "cancelled");
+    cancelled_mock.assert();
+}
+
+#[test]
+fn async_operation_polling_timeout_returns_exit_code_5() {
+    let mut server = Server::new();
+    let client = AnkiClient::new(server.url(), None, Some("s-1".into()))
+        .expect("client init")
+        .with_poll_delays(Duration::from_millis(10), Duration::from_millis(25));
+
+    let op_running = rpc_ok_mock(
+        &mut server,
+        "operations.get",
+        json!({ "operationId": "op-timeout" }),
+        json!({ "operationId": "op-timeout", "method": "collection.sync", "state": "running" }),
+    )
+    .expect_at_least(1);
+
+    // timeout_secs = 0 triggers immediate deadline check after first non-terminal poll
+    let err = client
+        .wait_for_operation("op-timeout", 0)
+        .expect_err("polling timeout should return Timeout");
+    assert_eq!(err.exit_code(), 5);
+    assert!(matches!(err, CliError::Timeout { .. }));
+    let err_json = err.to_json();
+    assert_eq!(err_json["error"]["kind"], "timeout");
+    assert_eq!(err_json["error"]["operationId"], "op-timeout");
+    op_running.assert();
 }
