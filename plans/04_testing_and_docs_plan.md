@@ -4,16 +4,17 @@
 Implement the three-layer automated integration and contract test suites (`tests/schema_contract_tests.rs`, `tests/mock_http_tests.rs`, and `tests/cli_e2e_tests.rs`) proving 100% conformance of `anki-cli` across all 96 Anki-Connect API v1 methods, scope-aware session handling, pagination, operation polling, batching, YAML/JSON formatting, and deterministic exit codes. Update `SKILL.md` and `README.md` to document YAML-by-default output, YAML/JSON parameter inputs, pre-flight schema validation, batch workflows, and the complete subcommand reference.
 
 ### Implementation Status
-- [ ] **Phase 1 — Schema Contract Test Suite (`tests/schema_contract_tests.rs`) (`1.1`–`1.3`)**
+- [x] **Phase 1 — Schema Contract Test Suite (`tests/schema_contract_tests.rs`) (`1.1`–`1.3`)**
 - [ ] **Phase 2 — Mock HTTP Server Integration Tests (`tests/mock_http_tests.rs`) (`2.1`–`2.3`)**
 - [ ] **Phase 3 — CLI Binary End-to-End Tests & Documentation (`3.1`–`3.2`)**
 
 ### Handoff Context (Updated After Each Task)
-> **Next task**: `1.3` (Add Extended Domain Subcommand Contract Tests & 96-Method Exhaustive Coverage Assertion)
+> **Next task**: `2.1` (Create Mock HTTP Tests for Envelopes, Bearer Auth, and Scope-Aware Session Injection)
 >
 > **Context from completed tasks**:
 > - **1.1**: Created `tests/schema_contract_tests.rs` with `ROOT_SCHEMA` and `METHOD_VALIDATORS` (`jsonschema::draft202012::new` compiled for every `x-methods.<method>.params` and `x-methods.<method>.request` with `$defs`), `validate_rpc_contract(method: &str, raw_params: &Value) -> Result<(), String>` (validates both no-session and scope-aware `--session "test-session"` modes, plus `anki_skill::schema::validate_method_params`), and `assert_cli_args_conform(args: &[&str]) -> Vec<String>` (handling `RpcPlan::Local`, `Call`, `Paginate`, `WaitOperation`, and `Batch` in `Execute`/`Transport` modes). Added self-tests `schema_x_examples_pass_contract_validation` (16 examples) and `schema_x_invalid_examples_are_rejected` (17 invalid examples).
 > - **1.2**: Added `core_domain_cli_cases()`, `escape_hatches_and_schema_local_contract`, and `core_domain_subcommands_conform_to_schema` in `tests/schema_contract_tests.rs`, covering all 53 core domain & escape-hatch RPC methods (`api.describe`, `api.execute`, `collection` [5], `operations` [2 + `wait`], `decks` [6], `deckPresets` [6], `notes` [12], `cards` [7], `tags` [5], `noteTypes` [8]) plus local `schema`, `schema notes.create`, and `schema --errors` assertions, YAML/JSON `--params`/`--fields`, `--name`/`--id` refs, and `--all` pagination.
+> - **1.3**: Added `extended_domain_cli_cases()`, `extended_domain_subcommands_conform_to_schema`, and `all_96_schema_methods_covered_by_cli_subcommands` in `tests/schema_contract_tests.rs`, covering all 43 extended domain methods (`media` [5], `packages` [2], `scheduling` [9], `reviews` [2], `statistics` [4], `profiles` [3], `access` [1], `advanced` [2], `gui` [15]) and asserting 100% (96/96) `x-methods` coverage across all CLI subcommands. Also fixed a clap flag collision in `src/commands/media.rs` where `MediaCmd::Store::url` (`--url`) collided with global `Cli::url`, renaming the subcommand flag to `--source-url` (`id = "source_url"`).
 
 > [!IMPORTANT]
 > ### Autonomous Execution Protocol: `"Continue with next task @plans/04_testing_and_docs_plan.md"`
@@ -86,7 +87,7 @@ Implement the three-layer automated integration and contract test suites (`tests
         - `noteTypes.list`, `noteTypes.get`, `noteTypes.create`, `noteTypes.update`, `noteTypes.editStructure`, `noteTypes.getTemplateUsage`, `noteTypes.replaceText` (with `--note-types` and `--all-note-types`), `noteTypes.deleteUnused`
   - **Verify**: `cargo test --test schema_contract_tests` and `cargo clippy --all-targets -- -D warnings`
 
-- [ ] **1.3 Add Extended Domain Subcommand Contract Tests & 96-Method Exhaustive Coverage Assertion**
+- [x] **1.3 Add Extended Domain Subcommand Contract Tests & 96-Method Exhaustive Coverage Assertion**
   - **File(s)**: `tests/schema_contract_tests.rs`
   - **Scope**:
     - Add table-driven CLI-to-schema contract tests using `assert_cli_args_conform` for all remaining domain subcommands:

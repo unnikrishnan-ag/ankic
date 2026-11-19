@@ -771,3 +771,469 @@ fn core_domain_subcommands_conform_to_schema() {
         );
     }
 }
+
+fn extended_domain_cli_cases() -> &'static [&'static [&'static str]] {
+    &[
+        // media (5 methods)
+        &["anki-cli", "media", "list"],
+        &["anki-cli", "media", "list", "--pattern", "*.png"],
+        &["anki-cli", "media", "get", "cat.png"],
+        &[
+            "anki-cli",
+            "media",
+            "store",
+            "--filename",
+            "cat.png",
+            "--data",
+            "aGVsbG8=",
+            "--collision",
+            "rename",
+            "--skip-hash-alg",
+            "sha256",
+            "--skip-hash-digest",
+            "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+        ],
+        &[
+            "anki-cli",
+            "media",
+            "store",
+            "--filename",
+            "audio.mp3",
+            "--path",
+            "/tmp/audio.mp3",
+            "--collision",
+            "replace",
+        ],
+        &[
+            "anki-cli",
+            "media",
+            "store",
+            "--filename",
+            "remote.jpg",
+            "--source-url",
+            "https://example.com/remote.jpg",
+            "--collision",
+            "error",
+        ],
+        &["anki-cli", "media", "delete", "cat.png"],
+        &["anki-cli", "media", "directory"],
+        // packages (2 methods)
+        &["anki-cli", "packages", "import", "/tmp/deck.apkg"],
+        &[
+            "anki-cli",
+            "packages",
+            "export",
+            "--name",
+            "Default",
+            "--path",
+            "/tmp/out.apkg",
+            "--include-scheduling",
+        ],
+        &[
+            "anki-cli",
+            "packages",
+            "export",
+            "--id",
+            "1",
+            "--path",
+            "/tmp/out.apkg",
+        ],
+        // scheduling (9 methods)
+        &["anki-cli", "scheduling", "get", "1700000000010"],
+        &["anki-cli", "scheduling", "queue"],
+        &["anki-cli", "scheduling", "queue", "--fetch-limit", "25"],
+        &["anki-cli", "scheduling", "predict", "1700000000010"],
+        &["anki-cli", "scheduling", "due", "1700000000010"],
+        &[
+            "anki-cli",
+            "scheduling",
+            "due",
+            "1700000000010",
+            "--include-learn-ahead",
+        ],
+        &[
+            "anki-cli",
+            "scheduling",
+            "answer",
+            "1700000000010",
+            "--rating",
+            "good",
+            "--state-token",
+            "tok-1",
+            "--elapsed-ms",
+            "2400",
+        ],
+        &[
+            "anki-cli",
+            "scheduling",
+            "answer-many",
+            "--answers",
+            r#"[{"cardId":"1700000000010","rating":"good","stateToken":"tok-1"}]"#,
+        ],
+        &[
+            "anki-cli",
+            "scheduling",
+            "answer-many",
+            "--answers=- cardId: '1700000000010'\n  rating: easy\n  stateToken: tok-2\n  elapsedMs: 1200",
+        ],
+        &[
+            "anki-cli",
+            "scheduling",
+            "reposition",
+            "--starting-from",
+            "10",
+            "--step-size",
+            "5",
+            "--randomize",
+            "--shift-existing",
+            "1700000000010",
+            "1700000000011",
+        ],
+        &[
+            "anki-cli",
+            "scheduling",
+            "reset",
+            "--no-restore-position",
+            "--reset-counts",
+            "--no-log",
+            "1700000000010",
+        ],
+        &[
+            "anki-cli",
+            "scheduling",
+            "set-due-date",
+            "--days",
+            "3-7!",
+            "1700000000010",
+        ],
+        // reviews (2 methods)
+        &["anki-cli", "reviews", "list"],
+        &[
+            "anki-cli",
+            "reviews",
+            "list",
+            "--card-id",
+            "1700000000010",
+            "--after-id",
+            "1700000000000",
+            "--no-manual",
+            "--limit",
+            "50",
+        ],
+        &[
+            "anki-cli",
+            "reviews",
+            "list",
+            "--deck-name",
+            "Default",
+            "--include-children",
+            "--membership",
+            "current",
+            "--all",
+        ],
+        &["anki-cli", "reviews", "latest-id"],
+        &[
+            "anki-cli",
+            "reviews",
+            "latest-id",
+            "--deck-id",
+            "1",
+            "--membership",
+            "home",
+        ],
+        // statistics (4 methods)
+        &["anki-cli", "statistics", "today"],
+        &["anki-cli", "statistics", "review-days"],
+        &["anki-cli", "statistics", "summary"],
+        &["anki-cli", "statistics", "summary", "--name", "Default"],
+        &["anki-cli", "statistics", "summary", "--id", "1"],
+        &["anki-cli", "statistics", "html"],
+        &["anki-cli", "statistics", "html", "--name", "Default"],
+        &["anki-cli", "statistics", "html", "--id", "1"],
+        // profiles (3 methods)
+        &["anki-cli", "profiles", "list"],
+        &["anki-cli", "profiles", "active"],
+        &["anki-cli", "profiles", "switch", "User 1"],
+        // access (1 method)
+        &["anki-cli", "access", "request-permission"],
+        // advanced (2 methods)
+        &[
+            "anki-cli",
+            "advanced",
+            "cards-update",
+            "1700000000010",
+            "--interval-days",
+            "14",
+            "--sm2-ease-permille",
+            "2500",
+            "--repetitions",
+            "3",
+            "--lapses",
+            "0",
+            "--remaining-steps",
+            "0",
+            "--fsrs-memory",
+            "stabilityDays: 12.5\ndifficulty: 4.2",
+            "--custom-data",
+            "{\"k\":1}",
+        ],
+        &[
+            "anki-cli",
+            "advanced",
+            "cards-update",
+            "1700000000010",
+            "--patch",
+            r#"{"intervalDays": 7}"#,
+        ],
+        &[
+            "anki-cli",
+            "advanced",
+            "reviews-import",
+            "--reviews",
+            r#"[{"id":"1700000000000","cardId":"1700000000010","rating":"good","interval":{"value":5,"unit":"days"},"previousInterval":{"value":1,"unit":"days"},"factor":{"encoding":"legacySm2EasePermille","value":2500},"elapsedMs":1500,"kind":"review"}]"#,
+        ],
+        &[
+            "anki-cli",
+            "advanced",
+            "reviews-import",
+            "--reviews=- id: '1700000000001'\n  cardId: '1700000000010'\n  rating: hard\n  interval:\n    value: 60\n    unit: seconds\n  previousInterval:\n    value: 0\n    unit: seconds\n  factor:\n    encoding: legacySm2EasePermille\n    value: 2500\n  elapsedMs: 2200\n  kind: learning",
+        ],
+        // gui (15 methods: browser [3], editors [3], reviewer [6], application [3])
+        &["anki-cli", "gui", "browser-open"],
+        &[
+            "anki-cli",
+            "gui",
+            "browser-open",
+            "--query",
+            "deck:Default",
+            "--sort-by",
+            "due",
+            "--sort-dir",
+            "ascending",
+        ],
+        &["anki-cli", "gui", "browser-selection"],
+        &[
+            "anki-cli",
+            "gui",
+            "browser-select",
+            "--card-id",
+            "1700000000010",
+        ],
+        &[
+            "anki-cli",
+            "gui",
+            "browser-select",
+            "--note-id",
+            "1700000000001",
+        ],
+        &["anki-cli", "gui", "editor-open-note", "1700000000001"],
+        &["anki-cli", "gui", "editor-open-add"],
+        &[
+            "anki-cli",
+            "gui",
+            "editor-open-add",
+            "--deck-name",
+            "Default",
+            "--note-type-name",
+            "Basic",
+            "--fields",
+            "Front: Question\nBack: Answer",
+            "--tag",
+            "study",
+        ],
+        &[
+            "anki-cli",
+            "gui",
+            "editor-open-add",
+            "--note",
+            r#"{"deck":{"name":"Default"},"noteType":{"name":"Basic"},"fields":{"Front":"Q","Back":"A"},"tags":["t1"]}"#,
+        ],
+        &[
+            "anki-cli",
+            "gui",
+            "editor-update-draft",
+            "editor-1",
+            "--deck-id",
+            "1",
+            "--note-type-id",
+            "1700000000005",
+            "--fields",
+            r#"{"Front":"Updated"}"#,
+            "--tag",
+            "revised",
+            "--mode",
+            "replace",
+        ],
+        &[
+            "anki-cli",
+            "gui",
+            "editor-update-draft",
+            "editor-1",
+            "--patch",
+            "fields:\n  Front: Hello\ntags:\n  - extra",
+            "--mode",
+            "append",
+        ],
+        &["anki-cli", "gui", "reviewer-get"],
+        &[
+            "anki-cli",
+            "gui",
+            "reviewer-start-timer",
+            "--state-token",
+            "rev-tok-1",
+        ],
+        &[
+            "anki-cli",
+            "gui",
+            "reviewer-show-question",
+            "--state-token",
+            "rev-tok-1",
+        ],
+        &[
+            "anki-cli",
+            "gui",
+            "reviewer-show-answer",
+            "--state-token",
+            "rev-tok-1",
+        ],
+        &[
+            "anki-cli",
+            "gui",
+            "reviewer-answer",
+            "--state-token",
+            "rev-tok-1",
+            "--rating",
+            "good",
+        ],
+        &[
+            "anki-cli",
+            "gui",
+            "reviewer-play-audio",
+            "--state-token",
+            "rev-tok-1",
+        ],
+        &["anki-cli", "gui", "navigate", "deckBrowser"],
+        &[
+            "anki-cli",
+            "gui",
+            "navigate",
+            "deckOverview",
+            "--deck-name",
+            "Default",
+        ],
+        &[
+            "anki-cli",
+            "gui",
+            "navigate",
+            "review",
+            "--deck-id",
+            "1",
+        ],
+        &["anki-cli", "gui", "import-file"],
+        &[
+            "anki-cli",
+            "gui",
+            "import-file",
+            "--path",
+            "/tmp/deck.apkg",
+        ],
+        &["anki-cli", "gui", "exit"],
+    ]
+}
+
+#[test]
+fn extended_domain_subcommands_conform_to_schema() {
+    let mut covered = std::collections::BTreeSet::new();
+    for args in extended_domain_cli_cases() {
+        for method in assert_cli_args_conform(args) {
+            covered.insert(method);
+        }
+    }
+
+    // 5 media + 2 packages + 9 scheduling + 2 reviews + 4 statistics
+    // + 3 profiles + 1 access + 2 advanced + 15 gui = 43 methods
+    let expected_extended_methods = [
+        "media.list",
+        "media.get",
+        "media.store",
+        "media.delete",
+        "media.getDirectory",
+        "packages.import",
+        "packages.export",
+        "scheduling.get",
+        "scheduling.getQueue",
+        "scheduling.predict",
+        "scheduling.getDue",
+        "scheduling.answer",
+        "scheduling.answerMany",
+        "scheduling.repositionNewCards",
+        "scheduling.reset",
+        "scheduling.setDueDate",
+        "reviews.list",
+        "reviews.getLatestId",
+        "statistics.getToday",
+        "statistics.getReviewDays",
+        "statistics.getSummary",
+        "statistics.getHtml",
+        "profiles.list",
+        "profiles.getActive",
+        "profiles.switch",
+        "access.requestPermission",
+        "advanced.cards.update",
+        "advanced.reviews.import",
+        "browser.open",
+        "browser.getSelection",
+        "browser.select",
+        "editors.openNote",
+        "editors.openAdd",
+        "editors.updateDraft",
+        "reviewer.get",
+        "reviewer.startTimer",
+        "reviewer.showQuestion",
+        "reviewer.showAnswer",
+        "reviewer.answer",
+        "reviewer.playAudio",
+        "application.navigate",
+        "application.importFile",
+        "application.exit",
+    ];
+    for method in expected_extended_methods {
+        assert!(
+            covered.contains(method),
+            "expected extended method '{method}' to be covered by extended_domain_cli_cases"
+        );
+    }
+}
+
+#[test]
+fn all_96_schema_methods_covered_by_cli_subcommands() {
+    let x_methods = ROOT_SCHEMA
+        .get("x-methods")
+        .and_then(Value::as_object)
+        .expect("root schema must contain x-methods object");
+    assert_eq!(
+        x_methods.len(),
+        96,
+        "expected exactly 96 methods in x-methods"
+    );
+
+    let schema_methods: std::collections::BTreeSet<String> =
+        x_methods.keys().cloned().collect();
+
+    let mut tested_methods = std::collections::BTreeSet::new();
+    for args in core_domain_cli_cases()
+        .iter()
+        .chain(extended_domain_cli_cases())
+    {
+        for method in assert_cli_args_conform(args) {
+            tested_methods.insert(method);
+        }
+    }
+
+    let missing: Vec<&String> = schema_methods.difference(&tested_methods).collect();
+    assert!(
+        missing.is_empty(),
+        "CLI subcommands are missing schema contract coverage for methods: {missing:?}"
+    );
+    assert_eq!(tested_methods.len(), 96);
+}

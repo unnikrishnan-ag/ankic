@@ -25,13 +25,13 @@ pub enum MediaCmd {
         #[arg(long)]
         filename: String,
         /// Base64-encoded file contents
-        #[arg(long, visible_alias = "data-base64", conflicts_with_all = ["path", "url"])]
+        #[arg(long, visible_alias = "data-base64", conflicts_with_all = ["path", "source_url"])]
         data: Option<String>,
         /// Local filesystem path to read media bytes from
-        #[arg(long, conflicts_with_all = ["data", "url"])]
+        #[arg(long, conflicts_with_all = ["data", "source_url"])]
         path: Option<String>,
         /// HTTP or HTTPS URL to fetch media bytes from
-        #[arg(long, conflicts_with_all = ["data", "path"])]
+        #[arg(id = "source_url", long = "source-url", conflicts_with_all = ["data", "path"])]
         url: Option<String>,
         /// Collision policy when filename already exists (rename, replace, error)
         #[arg(long)]
@@ -88,7 +88,7 @@ pub fn to_rpc_plan(cmd: &MediaCmd) -> Result<RpcPlan, CliError> {
                 (None, None, Some(u)) => json!({ "url": u }),
                 _ => {
                     return Err(CliError::InvalidInput(
-                        "Specify exactly one of --data, --path, or --url".into(),
+                        "Specify exactly one of --data, --path, or --source-url".into(),
                     ));
                 }
             };
