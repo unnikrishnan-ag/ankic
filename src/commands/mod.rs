@@ -6,6 +6,7 @@ use crate::error::CliError;
 use crate::output::OutputFormat;
 use crate::schema;
 
+pub mod advanced;
 pub mod cards;
 pub mod collection;
 pub mod deck_presets;
@@ -22,6 +23,7 @@ pub mod scheduling;
 pub mod statistics;
 pub mod tags;
 
+pub use advanced::{AccessCmd, AdvancedCmd};
 pub use cards::CardsCmd;
 pub use collection::CollectionCmd;
 pub use deck_presets::DeckPresetsCmd;
@@ -177,6 +179,18 @@ pub enum Commands {
     Profiles {
         #[command(subcommand)]
         command: ProfilesCmd,
+    },
+
+    /// API access permission commands (request-permission)
+    Access {
+        #[command(subcommand)]
+        command: AccessCmd,
+    },
+
+    /// Advanced low-level card and review commands (cards-update, reviews-import)
+    Advanced {
+        #[command(subcommand)]
+        command: AdvancedCmd,
     },
 
     /// Async operation tracking (get, wait, cancel)
@@ -337,6 +351,8 @@ pub fn to_rpc_plan(cmd: &Commands) -> Result<RpcPlan, CliError> {
         Commands::Reviews { command } => reviews::to_rpc_plan(command),
         Commands::Statistics { command } => statistics::to_rpc_plan(command),
         Commands::Profiles { command } => profiles::to_rpc_plan(command),
+        Commands::Access { command } => advanced::to_rpc_plan_access(command),
+        Commands::Advanced { command } => advanced::to_rpc_plan_advanced(command),
         Commands::Operations { command } => operations::to_rpc_plan(command),
         Commands::Batch(args) => {
             let requests = parse_batch_requests(args)?;

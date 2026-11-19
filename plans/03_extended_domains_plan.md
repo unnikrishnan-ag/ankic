@@ -6,11 +6,11 @@ Implement first-class, schema-validated CLI subcommands for all 12 remaining Ank
 ### Implementation Status
 - [x] **Phase 1 — Media & Packages Subcommands (`1.1`–`1.2`)**
 - [x] **Phase 2 — Scheduling & Reviews Subcommands (`2.1`–`2.3`)**
-- [ ] **Phase 3 — Statistics, Profiles, Access & Advanced Subcommands (`3.1`–`3.2`)**
+- [x] **Phase 3 — Statistics, Profiles, Access & Advanced Subcommands (`3.1`–`3.2`)**
 - [ ] **Phase 4 — GUI Subcommands (`application`, `browser`, `editors`, `reviewer`) (`4.1`–`4.2`)**
 
 ### Handoff Context (Updated After Each Task)
-> **Next task**: `3.2` (Implement `access` & `advanced` Domain Subcommands in `src/commands/advanced.rs`)
+> **Next task**: `4.1` (Implement `application`, `browser`, and `editors` Subcommands in `src/commands/gui.rs`)
 >
 > **Context from completed tasks**:
 > - **Task 1.1 (`src/commands/media.rs`, `src/commands/mod.rs`)**: Implemented `MediaCmd` (`List`, `Get`, `Store`, `Delete`, `Directory`) and `pub fn to_rpc_plan(cmd: &MediaCmd) -> Result<RpcPlan, CliError>` covering all 5 `media.*` methods (`media.list`, `media.get`, `media.store`, `media.delete`, `media.getDirectory`), wired into `Commands::Media` (`pub use media::MediaCmd`). `Store` enforces mutually exclusive `--data` (alias `--data-base64`) / `--path` / `--url`, optional `--collision` (`rename|replace|error`), paired `--skip-hash-alg` (`md5|sha256`) + `--skip-hash-digest`, and `--no-wait`/`--timeout` (`wait: !no_wait`, default `300`). Unit tests validate all 5 methods and error cases against `schema::validate_method_params`.
@@ -19,6 +19,7 @@ Implement first-class, schema-validated CLI subcommands for all 12 remaining Ank
 > - **Task 2.2 (`src/commands/scheduling.rs`)**: Extended `SchedulingCmd` and `to_rpc_plan` with the 5 `scheduling.*` mutation methods: `Answer` (`scheduling.answer`, validates `rating` in `again|hard|good|easy`, non-empty `--state-token`, optional `--elapsed-ms`), `AnswerMany` (`scheduling.answerMany`, parses YAML/JSON array via `--answers`/`--stdin`), `Reposition` (`scheduling.repositionNewCards`, validates non-empty `card_ids`, `starting_from <= 2_147_483_647`, `step_size` in `1..=2_147_483_647` default `1`), `Reset` (`scheduling.reset`, `--no-restore-position`/`--reset-counts`/`--no-log` mapping to `restorePosition: !no_restore_position`, `resetCounts`, `log: !no_log`), and `SetDueDate` (`scheduling.setDueDate`, validates non-empty `--days`). Unit tests validate all 9 `scheduling.*` methods and error cases against `schema::validate_method_params`.
 > - **Task 2.3 (`src/commands/reviews.rs`, `src/commands/mod.rs`)**: Implemented `ReviewsCmd` (`List`, `LatestId`) and `pub fn to_rpc_plan(cmd: &ReviewsCmd) -> Result<RpcPlan, CliError>` covering both `reviews.*` methods (`reviews.list`, `reviews.getLatestId`), wired into `Commands::Reviews` (`pub use reviews::ReviewsCmd`). Shared `build_filter_params` enforces mutual exclusion between `--card-id` (`cardIds`) and `--deck-name`/`--deck-id` (`deck`) and validates `membership` in `current|home`. `List` validates `limit` in `1..=1000` (default `100`), non-empty `--after-id`/`--cursor`, maps `--no-manual` to `includeManual: !no_manual`, and returns `RpcPlan::Paginate` on `"items"` when `--all` is set. Unit tests validate all filter modes and error cases against `schema::validate_method_params`.
 > - **Task 3.1 (`src/commands/statistics.rs`, `src/commands/profiles.rs`, `src/commands/mod.rs`)**: Implemented `StatisticsCmd` (`Today`, `ReviewDays`, `Summary`, `Html`) and `pub fn to_rpc_plan(cmd: &StatisticsCmd) -> Result<RpcPlan, CliError>` covering all 4 `statistics.*` methods (`statistics.getToday`, `statistics.getReviewDays`, `statistics.getSummary`, `statistics.getHtml`), plus `ProfilesCmd` (`List`, `Active`, `Switch`) and `pub fn to_rpc_plan(cmd: &ProfilesCmd) -> Result<RpcPlan, CliError>` covering all 3 `profiles.*` application-scoped methods (`profiles.list`, `profiles.getActive`, `profiles.switch` with `--no-wait`/`--timeout` default `300`), wired into `Commands::Statistics` and `Commands::Profiles`. Unit tests validate all 7 methods and empty-input error cases against `schema::validate_method_params`.
+> - **Task 3.2 (`src/commands/advanced.rs`, `src/commands/mod.rs`)**: Implemented `AccessCmd` (`RequestPermission`) with `pub fn to_rpc_plan_access(cmd: &AccessCmd) -> Result<RpcPlan, CliError>` covering `access.requestPermission` (`scope: "application"`), plus `AdvancedCmd` (`CardsUpdate`, `ReviewsImport`) with `pub fn to_rpc_plan_advanced(cmd: &AdvancedCmd) -> Result<RpcPlan, CliError>` covering `advanced.cards.update` (merging `--patch` YAML/JSON object with `--interval-days`, `--sm2-ease-permille`, `--repetitions`, `--lapses`, `--remaining-steps`, `--fsrs-memory`, `--custom-data`, rejecting empty patch/card ID) and `advanced.reviews.import` (parsing `--reviews`/`--stdin` YAML/JSON array with `--no-wait`/`--timeout` default `300`), wired into `Commands::Access` and `Commands::Advanced` (`pub use advanced::{AccessCmd, AdvancedCmd}`). Unit tests validate all 3 methods and error cases against `schema::validate_method_params`.
 
 > [!IMPORTANT]
 > ### Autonomous Execution Protocol: `"Continue with next task @plans/03_extended_domains_plan.md"`
@@ -170,7 +171,7 @@ Implement first-class, schema-validated CLI subcommands for all 12 remaining Ank
     - Add unit tests in `src/commands/statistics.rs` and `src/commands/profiles.rs` covering all 7 methods and validating generated `(method, params)` against `schema::validate_method_params`.
   - **Verify**: `cargo test --all-targets && cargo clippy --all-targets -- -D warnings`
 
-- [ ] **3.2 Implement `access` & `advanced` Domain Subcommands (`src/commands/advanced.rs`)**
+- [x] **3.2 Implement `access` & `advanced` Domain Subcommands (`src/commands/advanced.rs`)**
   - **File(s)**:
     - `src/commands/advanced.rs` (new)
     - `src/commands/mod.rs` (modify)
