@@ -6,11 +6,11 @@ Modularize `src/commands/` into clean domain files and expand the core Anki doma
 ### Implementation Status
 - [x] **Phase 1 — Command Modularization & Collection, Operations, Decks, Deck Presets (`1.1`–`1.3`)**
 - [x] **Phase 2 — Complete `notes` Domain (All 12 Methods) (`2.1`–`2.3`)**
-- [ ] **Phase 3 — Complete `cards` & `tags` Domains (12 Methods) (`3.1`–`3.2`)**
+- [x] **Phase 3 — Complete `cards` & `tags` Domains (12 Methods) (`3.1`–`3.2`)**
 - [ ] **Phase 4 — Complete `note-types` Domain (All 8 Methods) (`4.1`–`4.2`)**
 
 ### Handoff Context (Updated After Each Task)
-> **Next task**: `3.2` (Implement `tags` Domain (`src/commands/tags.rs`))
+> **Next task**: `4.1` (Implement `note-types` Core Methods (`list`, `get`, `create`, `update`, `template-usage`))
 >
 > **Context from completed tasks**:
 > - **1.1**: Created `src/commands/helpers.rs` (`call_plan`, `make_ref`, `make_refs`, `make_sort`, `parse_yaml_or_json_value`, `parse_yaml_or_json_object`, `parse_yaml_or_json_array`, `read_input_or_stdin`), `src/commands/collection.rs` (`CollectionCmd`, `to_rpc_plan` covering `collection.get`, `collection.sync`, `collection.refresh`, `collection.checkIntegrity`, `collection.undo`), and `src/commands/operations.rs` (`OperationsCmd`, `to_rpc_plan` covering `operations.get`, `operations.cancel`, `RpcPlan::WaitOperation`). Wired `helpers`, `collection`, and `operations` into `src/commands/mod.rs` with `pub use collection::CollectionCmd; pub use operations::OperationsCmd;`.
@@ -20,6 +20,7 @@ Modularize `src/commands/` into clean domain files and expand the core Anki doma
 > - **2.2**: Enhanced `NotesCmd::Create` (`--deck`/`--deck-id`, `--note-type`/`--note-type-id`, YAML/JSON `--fields`, `--tag`, `--allow-duplicates`, `--duplicate-scope`, `--duplicate-deck`/`--duplicate-deck-id`, `--reject-empty-questions`), added `NotesCmd::CreateMany` (`create-many` with `--notes`/`--items` or `--stdin`, `--atomic`), and added shared `build_note_input` helper in `src/commands/notes.rs` alongside unit tests for `notes.create`, `notes.createMany`, `notes.update`, and `notes.delete`.
 > - **2.3**: Added `NotesCmd::PlanConversion` (`plan-conversion` -> `notes.planConversion` with `--source-name`/`--source-id` and `--target-name`/`--target-id`) and `NotesCmd::Convert` (`convert` -> `notes.convert` with positional `ids`, `--target-name`/`--target-id`, YAML/JSON `--fields` and `--templates` arrays of `ConversionMapping`, and `--plan-token`) in `src/commands/notes.rs`, plus unit tests validating both methods against `schemas/api-v1.schema.json`.
 > - **3.1**: Extracted and completed `CardsCmd` and `to_rpc_plan` in `src/commands/cards.rs` covering all 7 `cards.*` methods (`cards.get`, `cards.getMany` via `get-many`, `cards.search` with `--sort-by`/`--sort-dir` and `--all` pagination, `cards.render`, `cards.move` with `--deck`/`--deck-id`, `cards.setSuspended` via `suspend`/`unsuspend`, and `cards.setFlags` with `0..=7` validation), wired `pub mod cards; pub use cards::CardsCmd;` into `src/commands/mod.rs` (removing inline `CardsCmd` and unused `search_plan`), and added unit tests validating all 7 methods against `schemas/api-v1.schema.json`.
+> - **3.2**: Created `src/commands/tags.rs` (`TagsCmd`, `to_rpc_plan` covering all 5 `tags.*` methods: `tags.list`, `tags.add`, `tags.remove` with non-empty `--note-id`/`--note-ids` and `--tag`/`--tags` validation, `tags.replace` enforcing `oneOf` between `--note-id`/`--note-ids` and `--all-notes`, and `tags.deleteUnused` via `delete-unused`), wired `pub mod tags; pub use tags::TagsCmd;` and `Commands::Tags` into `src/commands/mod.rs`, and added unit tests validating all 5 methods against `schemas/api-v1.schema.json`.
 
 > [!IMPORTANT]
 > ### Autonomous Execution Protocol: `"Continue with next task @plans/02_core_domains_plan.md"`
@@ -191,7 +192,7 @@ Modularize `src/commands/` into clean domain files and expand the core Anki doma
     - Add unit tests in `src/commands/cards.rs` covering all 7 `cards.*` methods (including `get-many`, `render`, `move` with `--deck` and `--deck-id`, and `flags` out-of-range check) and validating generated params with `schema::validate_method_params`.
   - **Verify**: `cargo test --all-targets && cargo clippy --all-targets -- -D warnings`
 
-- [ ] **3.2 Implement `tags` Domain (`src/commands/tags.rs`)**
+- [x] **3.2 Implement `tags` Domain (`src/commands/tags.rs`)**
   - **File(s)**:
     - `src/commands/tags.rs` (new)
     - `src/commands/mod.rs` (modify)

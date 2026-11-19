@@ -13,6 +13,7 @@ pub mod decks;
 pub mod helpers;
 pub mod notes;
 pub mod operations;
+pub mod tags;
 
 pub use cards::CardsCmd;
 pub use collection::CollectionCmd;
@@ -20,6 +21,7 @@ pub use deck_presets::DeckPresetsCmd;
 pub use decks::DecksCmd;
 pub use notes::NotesCmd;
 pub use operations::OperationsCmd;
+pub use tags::TagsCmd;
 
 #[derive(Parser)]
 #[command(
@@ -112,6 +114,12 @@ pub enum Commands {
     Cards {
         #[command(subcommand)]
         command: CardsCmd,
+    },
+
+    /// Tag commands (list, add, remove, replace, delete-unused)
+    Tags {
+        #[command(subcommand)]
+        command: TagsCmd,
     },
 
     /// Async operation tracking (get, wait, cancel)
@@ -264,6 +272,7 @@ pub fn to_rpc_plan(cmd: &Commands) -> Result<RpcPlan, CliError> {
         Commands::DeckPresets { command } => deck_presets::to_rpc_plan(command),
         Commands::Notes { command } => notes::to_rpc_plan(command),
         Commands::Cards { command } => cards::to_rpc_plan(command),
+        Commands::Tags { command } => tags::to_rpc_plan(command),
         Commands::Operations { command } => operations::to_rpc_plan(command),
         Commands::Batch(args) => {
             let requests = parse_batch_requests(args)?;
