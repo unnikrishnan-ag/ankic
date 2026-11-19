@@ -1,5 +1,3 @@
-use std::io::{self, Read};
-
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use serde_json::{json, Map, Value};
 
@@ -7,6 +5,13 @@ use crate::client::AnkiClient;
 use crate::error::CliError;
 use crate::output::OutputFormat;
 use crate::schema;
+
+pub mod collection;
+pub mod helpers;
+pub mod operations;
+
+pub use collection::CollectionCmd;
+pub use operations::OperationsCmd;
 
 #[derive(Parser)]
 #[command(
@@ -138,40 +143,6 @@ pub struct SchemaArgs {
     /// Show documented error codes and server limits instead of methods
     #[arg(long)]
     pub errors: bool,
-}
-
-#[derive(Subcommand)]
-pub enum CollectionCmd {
-    /// Inspect the active collection and its session ID
-    Get,
-    /// Run a coordinated sync (waits for completion unless --no-wait)
-    Sync {
-        #[arg(long, default_value_t = true)]
-        include_media: bool,
-        #[arg(long)]
-        no_wait: bool,
-        #[arg(long, default_value_t = 300)]
-        timeout: u64,
-    },
-    /// Refresh Anki windows (and optionally caches)
-    Refresh {
-        #[arg(long, default_value = "windows")]
-        target: String,
-    },
-    /// Run database integrity check and repairs
-    CheckIntegrity {
-        #[arg(long)]
-        no_wait: bool,
-        #[arg(long, default_value_t = 300)]
-        timeout: u64,
-    },
-    /// Undo the last Anki undo entry
-    Undo {
-        #[arg(long)]
-        no_wait: bool,
-        #[arg(long, default_value_t = 60)]
-        timeout: u64,
-    },
 }
 
 #[derive(Subcommand)]
@@ -317,20 +288,6 @@ pub enum CardsCmd {
     },
 }
 
-#[derive(Subcommand)]
-pub enum OperationsCmd {
-    /// Get the current status of an operation
-    Get { operation_id: String },
-    /// Poll an operation until it reaches a terminal state
-    Wait {
-        operation_id: String,
-        #[arg(long, default_value_t = 300)]
-        timeout: u64,
-    },
-    /// Request cancellation of an operation
-    Cancel { operation_id: String },
-}
-
 #[derive(Args)]
 pub struct BatchArgs {
     /// Path to a YAML or JSON file containing an array of {method, params} objects
@@ -454,34 +411,7 @@ pub fn to_rpc_plan(cmd: &Commands) -> Result<RpcPlan, CliError> {
             Ok(RpcPlan::Local(value))
         }
         Commands::Describe => Ok(call_plan("api.describe", json!({}))),
-        Commands::Collection { command } => match command {
-            CollectionCmd::Get => Ok(call_plan("collection.get", json!({}))),
-            CollectionCmd::Sync {
-                include_media,
-                no_wait,
-                timeout,
-            } => Ok(RpcPlan::Call {
-                method: "collection.sync".into(),
-                params: json!({ "includeMedia": include_media }),
-                wait: !no_wait,
-                timeout_secs: *timeout,
-            }),
-            CollectionCmd::Refresh { target } => {
-                Ok(call_plan("collection.refresh", json!({ "target": target })))
-            }
-            CollectionCmd::CheckIntegrity { no_wait, timeout } => Ok(RpcPlan::Call {
-                method: "collection.checkIntegrity".into(),
-                params: json!({}),
-                wait: !no_wait,
-                timeout_secs: *timeout,
-            }),
-            CollectionCmd::Undo { no_wait, timeout } => Ok(RpcPlan::Call {
-                method: "collection.undo".into(),
-                params: json!({}),
-                wait: !no_wait,
-                timeout_secs: *timeout,
-            }),
-        },
+        Commands::Collection { command } => collection::to_rpc_plan(command),
         Commands::Decks { command } => match command {
             DecksCmd::List => Ok(call_plan("decks.list", json!({}))),
             DecksCmd::Get { name, id } => Ok(call_plan(
@@ -621,23 +551,7 @@ pub fn to_rpc_plan(cmd: &Commands) -> Result<RpcPlan, CliError> {
                 json!({ "ids": ids, "flag": flag }),
             )),
         },
-        Commands::Operations { command } => match command {
-            OperationsCmd::Get { operation_id } => Ok(call_plan(
-                "operations.get",
-                json!({ "operationId": operation_id }),
-            )),
-            OperationsCmd::Wait {
-                operation_id,
-                timeout,
-            } => Ok(RpcPlan::WaitOperation {
-                operation_id: operation_id.clone(),
-                timeout_secs: *timeout,
-            }),
-            OperationsCmd::Cancel { operation_id } => Ok(call_plan(
-                "operations.cancel",
-                json!({ "operationId": operation_id }),
-            )),
-        },
+        Commands::Operations { command } => operations::to_rpc_plan(command),
         Commands::Batch(args) => {
             let requests = parse_batch_requests(args)?;
             Ok(RpcPlan::Batch {
@@ -687,24 +601,12 @@ pub fn dispatch(client: &AnkiClient, cmd: Commands) -> Result<Value, CliError> {
 }
 
 fn read_stdin() -> Result<String, CliError> {
-    let mut buf = String::new();
-    io::stdin()
-        .read_to_string(&mut buf)
-        .map_err(|e| CliError::InvalidInput(format!("Failed to read stdin: {e}")))?;
-    Ok(buf)
+    helpers::read_input_or_stdin(None, true, "input")
 }
 
 /// Parse a YAML or JSON string and require it to be a JSON object.
 pub fn parse_structured_object(raw: &str, flag_name: &str) -> Result<Value, CliError> {
-    let trimmed = raw.trim();
-    let val: Value = serde_norway::from_str(trimmed)
-        .map_err(|e| CliError::InvalidInput(format!("Invalid YAML/JSON for {flag_name}: {e}")))?;
-    if !val.is_object() {
-        return Err(CliError::InvalidInput(format!(
-            "{flag_name} must be a YAML or JSON object"
-        )));
-    }
-    Ok(val)
+    helpers::parse_yaml_or_json_object(raw, flag_name).map(Value::Object)
 }
 
 fn parse_params(params: Option<&str>, use_stdin: bool) -> Result<Value, CliError> {
