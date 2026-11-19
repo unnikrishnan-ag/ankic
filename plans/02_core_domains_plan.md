@@ -10,12 +10,13 @@ Modularize `src/commands/` into clean domain files and expand the core Anki doma
 - [ ] **Phase 4 — Complete `note-types` Domain (All 8 Methods) (`4.1`–`4.2`)**
 
 ### Handoff Context (Updated After Each Task)
-> **Next task**: `2.1` (Extract `notes` Domain: Read & Validation Methods)
+> **Next task**: `2.2` (Implement `notes` Mutation Methods (`create`, `create-many`, `update`, `delete`))
 >
 > **Context from completed tasks**:
 > - **1.1**: Created `src/commands/helpers.rs` (`call_plan`, `make_ref`, `make_refs`, `make_sort`, `parse_yaml_or_json_value`, `parse_yaml_or_json_object`, `parse_yaml_or_json_array`, `read_input_or_stdin`), `src/commands/collection.rs` (`CollectionCmd`, `to_rpc_plan` covering `collection.get`, `collection.sync`, `collection.refresh`, `collection.checkIntegrity`, `collection.undo`), and `src/commands/operations.rs` (`OperationsCmd`, `to_rpc_plan` covering `operations.get`, `operations.cancel`, `RpcPlan::WaitOperation`). Wired `helpers`, `collection`, and `operations` into `src/commands/mod.rs` with `pub use collection::CollectionCmd; pub use operations::OperationsCmd;`.
 > - **1.2**: Created `src/commands/decks.rs` (`DecksCmd`, `to_rpc_plan` covering `decks.list`, `decks.get`, `decks.create`, `decks.update`, `decks.delete` with single `--name`/`--id` or multi-deck `--names`/`--ids` and `--delete-cards` enforcement, and `decks.getCounts` defaulting `includeChildren: true` with `--no-children` and `--include-children`). Wired `pub mod decks; pub use decks::DecksCmd;` into `src/commands/mod.rs` and removed the now-unused `make_ref` helper from `src/commands/mod.rs`.
 > - **1.3**: Created `src/commands/deck_presets.rs` (`DeckPresetsCmd`, `to_rpc_plan` covering `deckPresets.list`, `deckPresets.get`, `deckPresets.create` with optional `cloneFrom`, `deckPresets.update` with `anyOf` validation for `--new-name`/`--settings` and async `--no-wait`/`--timeout`, `deckPresets.assign` with repeatable `--deck-name`/`--deck-id`, and `deckPresets.delete` with optional `replacement`). Wired `pub mod deck_presets; pub use deck_presets::DeckPresetsCmd;` and `Commands::DeckPresets` (`deck-presets`) into `src/commands/mod.rs`.
+> - **2.1**: Created `src/commands/notes.rs` (`NotesCmd`, `to_rpc_plan`) covering `notes.get`, `notes.getMany` (`get-many`), `notes.search` (with `--sort-by`/`--sort-dir` and `--all` pagination), `notes.findEmpty` (`find-empty` with `--criterion`, optional `--query`, and `--all` pagination), `notes.validate` (wrapping `NoteInput` under `"note"`, supporting `--deck`/`--deck-id`, `--note-type`/`--note-type-id`, `--allow-duplicates`, `--reject-empty-questions`), and `notes.validateMany` (`validate-many` with `--notes`/`--items` or `--stdin`), while preserving existing `Create`/`Update`/`Delete` variants. Wired `pub mod notes; pub use notes::NotesCmd;` into `src/commands/mod.rs`.
 
 > [!IMPORTANT]
 > ### Autonomous Execution Protocol: `"Continue with next task @plans/02_core_domains_plan.md"`
@@ -117,7 +118,7 @@ Modularize `src/commands/` into clean domain files and expand the core Anki doma
 
 ### Phase 2 — Complete `notes` Domain (All 12 Methods)
 
-- [ ] **2.1 Extract `notes` Domain: Read & Validation Methods (`get`, `get-many`, `search`, `find-empty`, `validate`, `validate-many`)**
+- [x] **2.1 Extract `notes` Domain: Read & Validation Methods (`get`, `get-many`, `search`, `find-empty`, `validate`, `validate-many`)**
   - **File(s)**:
     - `src/commands/notes.rs` (new)
     - `src/commands/mod.rs` (modify)

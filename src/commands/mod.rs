@@ -10,11 +10,13 @@ pub mod collection;
 pub mod deck_presets;
 pub mod decks;
 pub mod helpers;
+pub mod notes;
 pub mod operations;
 
 pub use collection::CollectionCmd;
 pub use deck_presets::DeckPresetsCmd;
 pub use decks::DecksCmd;
+pub use notes::NotesCmd;
 pub use operations::OperationsCmd;
 
 #[derive(Parser)]
@@ -154,64 +156,6 @@ pub struct SchemaArgs {
     /// Show documented error codes and server limits instead of methods
     #[arg(long)]
     pub errors: bool,
-}
-
-#[derive(Subcommand)]
-pub enum NotesCmd {
-    /// Get a note by ID
-    Get { id: String },
-    /// Search notes using Anki query syntax
-    Search {
-        /// Anki search query (empty string matches all)
-        #[arg(default_value = "")]
-        query: String,
-        #[arg(long, default_value_t = 100)]
-        limit: u64,
-        #[arg(long)]
-        cursor: Option<String>,
-        /// Auto-paginate through all matching IDs
-        #[arg(long)]
-        all: bool,
-    },
-    /// Create a note
-    Create {
-        #[arg(long)]
-        deck: String,
-        #[arg(long)]
-        note_type: String,
-        /// YAML or JSON object of field name -> HTML value
-        #[arg(long)]
-        fields: String,
-        #[arg(long = "tag")]
-        tags: Vec<String>,
-    },
-    /// Validate a note without creating it
-    Validate {
-        #[arg(long)]
-        deck: String,
-        #[arg(long)]
-        note_type: String,
-        /// YAML or JSON object of field name -> HTML value
-        #[arg(long)]
-        fields: String,
-        #[arg(long = "tag")]
-        tags: Vec<String>,
-    },
-    /// Update note fields and/or tags
-    Update {
-        id: String,
-        /// YAML or JSON object of fields to merge
-        #[arg(long)]
-        fields: Option<String>,
-        /// Replace all tags with these values (repeatable)
-        #[arg(long = "tag")]
-        tags: Option<Vec<String>>,
-    },
-    /// Delete one or more notes by ID
-    Delete {
-        #[arg(required = true)]
-        ids: Vec<String>,
-    },
 }
 
 #[derive(Subcommand)]
@@ -382,77 +326,7 @@ pub fn to_rpc_plan(cmd: &Commands) -> Result<RpcPlan, CliError> {
         Commands::Collection { command } => collection::to_rpc_plan(command),
         Commands::Decks { command } => decks::to_rpc_plan(command),
         Commands::DeckPresets { command } => deck_presets::to_rpc_plan(command),
-        Commands::Notes { command } => match command {
-            NotesCmd::Get { id } => Ok(call_plan("notes.get", json!({ "id": id }))),
-            NotesCmd::Search {
-                query,
-                limit,
-                cursor,
-                all,
-            } => Ok(search_plan(
-                "notes.search",
-                query,
-                *limit,
-                cursor.as_deref(),
-                *all,
-            )),
-            NotesCmd::Create {
-                deck,
-                note_type,
-                fields,
-                tags,
-            } => {
-                let fields_val = parse_structured_object(fields, "--fields")?;
-                Ok(call_plan(
-                    "notes.create",
-                    json!({
-                        "deck": { "name": deck },
-                        "noteType": { "name": note_type },
-                        "fields": fields_val,
-                        "tags": tags,
-                    }),
-                ))
-            }
-            NotesCmd::Validate {
-                deck,
-                note_type,
-                fields,
-                tags,
-            } => {
-                let fields_val = parse_structured_object(fields, "--fields")?;
-                Ok(call_plan(
-                    "notes.validate",
-                    json!({
-                        "note": {
-                            "deck": { "name": deck },
-                            "noteType": { "name": note_type },
-                            "fields": fields_val,
-                            "tags": tags,
-                        }
-                    }),
-                ))
-            }
-            NotesCmd::Update { id, fields, tags } => {
-                let mut patch = Map::new();
-                if let Some(f) = fields {
-                    let fields_val = parse_structured_object(f, "--fields")?;
-                    patch.insert("fields".into(), fields_val);
-                }
-                if let Some(t) = tags {
-                    patch.insert("tags".into(), json!(t));
-                }
-                if patch.is_empty() {
-                    return Err(CliError::InvalidInput(
-                        "Provide at least one of --fields or --tag".into(),
-                    ));
-                }
-                Ok(call_plan(
-                    "notes.update",
-                    json!({ "id": id, "patch": patch }),
-                ))
-            }
-            NotesCmd::Delete { ids } => Ok(call_plan("notes.delete", json!({ "ids": ids }))),
-        },
+        Commands::Notes { command } => notes::to_rpc_plan(command),
         Commands::Cards { command } => match command {
             CardsCmd::Get { id } => Ok(call_plan("cards.get", json!({ "id": id }))),
             CardsCmd::Search {
