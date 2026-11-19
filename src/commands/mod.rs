@@ -15,6 +15,7 @@ pub mod media;
 pub mod note_types;
 pub mod notes;
 pub mod operations;
+pub mod packages;
 pub mod tags;
 
 pub use cards::CardsCmd;
@@ -25,6 +26,7 @@ pub use media::MediaCmd;
 pub use note_types::NoteTypesCmd;
 pub use notes::NotesCmd;
 pub use operations::OperationsCmd;
+pub use packages::PackagesCmd;
 pub use tags::TagsCmd;
 
 #[derive(Parser)]
@@ -137,6 +139,12 @@ pub enum Commands {
     Media {
         #[command(subcommand)]
         command: MediaCmd,
+    },
+
+    /// Anki package commands (import, export)
+    Packages {
+        #[command(subcommand)]
+        command: PackagesCmd,
     },
 
     /// Async operation tracking (get, wait, cancel)
@@ -292,6 +300,7 @@ pub fn to_rpc_plan(cmd: &Commands) -> Result<RpcPlan, CliError> {
         Commands::Tags { command } => tags::to_rpc_plan(command),
         Commands::NoteTypes { command } => note_types::to_rpc_plan(command),
         Commands::Media { command } => media::to_rpc_plan(command),
+        Commands::Packages { command } => packages::to_rpc_plan(command),
         Commands::Operations { command } => operations::to_rpc_plan(command),
         Commands::Batch(args) => {
             let requests = parse_batch_requests(args)?;

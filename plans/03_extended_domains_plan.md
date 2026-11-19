@@ -4,16 +4,17 @@
 Implement first-class, schema-validated CLI subcommands for all 12 remaining Anki-Connect API v1 namespaces (`media`, `packages`, `scheduling`, `reviews`, `statistics`, `profiles`, `access`, `advanced`, `application`, `browser`, `editors`, and `reviewer` — 43 methods total). Combined with Plans 1 and 2, this brings `anki-cli` to **100% first-class typed CLI subcommand coverage across all 96 API v1 methods and 21 namespaces**, with pure `to_rpc_plan` translation, YAML/JSON input parsing, cursor auto-pagination, and async operation polling.
 
 ### Implementation Status
-- [ ] **Phase 1 — Media & Packages Subcommands (`1.1`–`1.2`)**
+- [x] **Phase 1 — Media & Packages Subcommands (`1.1`–`1.2`)**
 - [ ] **Phase 2 — Scheduling & Reviews Subcommands (`2.1`–`2.3`)**
 - [ ] **Phase 3 — Statistics, Profiles, Access & Advanced Subcommands (`3.1`–`3.2`)**
 - [ ] **Phase 4 — GUI Subcommands (`application`, `browser`, `editors`, `reviewer`) (`4.1`–`4.2`)**
 
 ### Handoff Context (Updated After Each Task)
-> **Next task**: `1.2` (Implement `packages` Domain Subcommands in `src/commands/packages.rs`)
+> **Next task**: `2.1` (Implement `scheduling` Inspection Subcommands in `src/commands/scheduling.rs`)
 >
 > **Context from completed tasks**:
 > - **Task 1.1 (`src/commands/media.rs`, `src/commands/mod.rs`)**: Implemented `MediaCmd` (`List`, `Get`, `Store`, `Delete`, `Directory`) and `pub fn to_rpc_plan(cmd: &MediaCmd) -> Result<RpcPlan, CliError>` covering all 5 `media.*` methods (`media.list`, `media.get`, `media.store`, `media.delete`, `media.getDirectory`), wired into `Commands::Media` (`pub use media::MediaCmd`). `Store` enforces mutually exclusive `--data` (alias `--data-base64`) / `--path` / `--url`, optional `--collision` (`rename|replace|error`), paired `--skip-hash-alg` (`md5|sha256`) + `--skip-hash-digest`, and `--no-wait`/`--timeout` (`wait: !no_wait`, default `300`). Unit tests validate all 5 methods and error cases against `schema::validate_method_params`.
+> - **Task 1.2 (`src/commands/packages.rs`, `src/commands/mod.rs`)**: Implemented `PackagesCmd` (`Import`, `Export`) and `pub fn to_rpc_plan(cmd: &PackagesCmd) -> Result<RpcPlan, CliError>` covering both `packages.*` operation methods (`packages.import`, `packages.export`), wired into `Commands::Packages` (`pub use packages::PackagesCmd`). `Import` takes positional `path` with `--no-wait`/`--timeout` (default `300`); `Export` takes `--name` (aliases `--deck-name`, `--deck`) / `--id` (alias `--deck-id`) via `helpers::make_ref`, `--path`, `--include-scheduling`, and `--no-wait`/`--timeout` (default `300`). Unit tests validate both methods against `schema::validate_method_params` as well as missing deck reference and empty path errors.
 
 > [!IMPORTANT]
 > ### Autonomous Execution Protocol: `"Continue with next task @plans/03_extended_domains_plan.md"`
@@ -63,7 +64,7 @@ Implement first-class, schema-validated CLI subcommands for all 12 remaining Ank
     - Add unit tests in `src/commands/media.rs` covering all 5 `media.*` methods (`store` with `--data`, `--path`, `--url`, `--collision`, `--skip-hash-alg`/`--skip-hash-digest`, and error cases for missing/conflicting source flags) and validating every generated `(method, params)` with `schema::validate_method_params`.
   - **Verify**: `cargo test --all-targets && cargo clippy --all-targets -- -D warnings`
 
-- [ ] **1.2 Implement `packages` Domain Subcommands (`src/commands/packages.rs`)**
+- [x] **1.2 Implement `packages` Domain Subcommands (`src/commands/packages.rs`)**
   - **File(s)**:
     - `src/commands/packages.rs` (new)
     - `src/commands/mod.rs` (modify)
