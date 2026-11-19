@@ -56,15 +56,47 @@ pub enum NotesCmd {
     },
     /// Create a note
     Create {
-        #[arg(long)]
-        deck: String,
-        #[arg(long)]
-        note_type: String,
+        #[arg(long, conflicts_with = "deck_id")]
+        deck: Option<String>,
+        #[arg(long, conflicts_with = "deck")]
+        deck_id: Option<String>,
+        #[arg(long, conflicts_with = "note_type_id")]
+        note_type: Option<String>,
+        #[arg(long, conflicts_with = "note_type")]
+        note_type_id: Option<String>,
         /// YAML or JSON object of field name -> HTML value
         #[arg(long)]
         fields: String,
         #[arg(long = "tag")]
         tags: Vec<String>,
+        /// Allow duplicate notes
+        #[arg(long)]
+        allow_duplicates: bool,
+        /// Duplicate check scope (collection or deck)
+        #[arg(long)]
+        duplicate_scope: Option<String>,
+        /// Deck name for duplicate check when --duplicate-scope deck
+        #[arg(long, conflicts_with = "duplicate_deck_id")]
+        duplicate_deck: Option<String>,
+        /// Deck ID for duplicate check when --duplicate-scope deck
+        #[arg(long, conflicts_with = "duplicate_deck")]
+        duplicate_deck_id: Option<String>,
+        /// Reject notes whose generated questions are empty (true/false)
+        #[arg(long)]
+        reject_empty_questions: Option<bool>,
+    },
+    /// Create multiple notes
+    #[command(name = "create-many")]
+    CreateMany {
+        /// YAML or JSON array of NoteInput objects
+        #[arg(long, alias = "items", conflicts_with = "stdin")]
+        notes: Option<String>,
+        /// Read YAML or JSON array of NoteInput objects from stdin
+        #[arg(long, conflicts_with = "notes")]
+        stdin: bool,
+        /// Roll back all created notes if any note fails
+        #[arg(long)]
+        atomic: bool,
     },
     /// Validate a note without creating it
     Validate {
@@ -113,6 +145,66 @@ pub enum NotesCmd {
         #[arg(required = true)]
         ids: Vec<String>,
     },
+}
+
+#[allow(clippy::too_many_arguments)]
+fn build_note_input(
+    deck: Option<&str>,
+    deck_id: Option<&str>,
+    note_type: Option<&str>,
+    note_type_id: Option<&str>,
+    fields: &str,
+    tags: &[String],
+    allow_duplicates: bool,
+    duplicate_scope: Option<&str>,
+    duplicate_deck: Option<&str>,
+    duplicate_deck_id: Option<&str>,
+    reject_empty_questions: Option<bool>,
+) -> Result<Map<String, Value>, CliError> {
+    let deck_ref = make_ref(deck, deck_id, "deck")?;
+    let note_type_ref = make_ref(note_type, note_type_id, "noteType")?;
+    let fields_obj = parse_yaml_or_json_object(fields, "--fields")?;
+
+    let mut note = Map::new();
+    note.insert("deck".into(), deck_ref);
+    note.insert("noteType".into(), note_type_ref);
+    note.insert("fields".into(), Value::Object(fields_obj));
+    if !tags.is_empty() {
+        note.insert("tags".into(), json!(tags));
+    }
+
+    let mut duplicates = Map::new();
+    if allow_duplicates {
+        duplicates.insert("allow".into(), json!(true));
+    }
+    if let Some(scope) = duplicate_scope {
+        if !matches!(scope, "collection" | "deck") {
+            return Err(CliError::InvalidInput(format!(
+                "Invalid duplicate scope '{scope}': expected 'collection' or 'deck'"
+            )));
+        }
+        duplicates.insert("scope".into(), json!(scope));
+        if scope == "deck" {
+            let dup_deck_ref = make_ref(duplicate_deck, duplicate_deck_id, "duplicate-deck")?;
+            duplicates.insert("deck".into(), dup_deck_ref);
+        } else if duplicate_deck.is_some() || duplicate_deck_id.is_some() {
+            return Err(CliError::InvalidInput(
+                "--duplicate-deck/--duplicate-deck-id requires --duplicate-scope deck".into(),
+            ));
+        }
+    } else if duplicate_deck.is_some() || duplicate_deck_id.is_some() {
+        let dup_deck_ref = make_ref(duplicate_deck, duplicate_deck_id, "duplicate-deck")?;
+        duplicates.insert("deck".into(), dup_deck_ref);
+    }
+    if !duplicates.is_empty() {
+        note.insert("duplicates".into(), Value::Object(duplicates));
+    }
+
+    if let Some(reject) = reject_empty_questions {
+        note.insert("rejectEmptyQuestions".into(), json!(reject));
+    }
+
+    Ok(note)
 }
 
 /// Translate a `notes` subcommand into an `RpcPlan` without performing network I/O.
@@ -183,20 +275,45 @@ pub fn to_rpc_plan(cmd: &NotesCmd) -> Result<RpcPlan, CliError> {
         }
         NotesCmd::Create {
             deck,
+            deck_id,
             note_type,
+            note_type_id,
             fields,
             tags,
+            allow_duplicates,
+            duplicate_scope,
+            duplicate_deck,
+            duplicate_deck_id,
+            reject_empty_questions,
         } => {
-            let fields_obj = parse_yaml_or_json_object(fields, "--fields")?;
-            Ok(call_plan(
-                "notes.create",
-                json!({
-                    "deck": { "name": deck },
-                    "noteType": { "name": note_type },
-                    "fields": Value::Object(fields_obj),
-                    "tags": tags,
-                }),
-            ))
+            let note = build_note_input(
+                deck.as_deref(),
+                deck_id.as_deref(),
+                note_type.as_deref(),
+                note_type_id.as_deref(),
+                fields,
+                tags,
+                *allow_duplicates,
+                duplicate_scope.as_deref(),
+                duplicate_deck.as_deref(),
+                duplicate_deck_id.as_deref(),
+                *reject_empty_questions,
+            )?;
+            Ok(call_plan("notes.create", Value::Object(note)))
+        }
+        NotesCmd::CreateMany {
+            notes,
+            stdin,
+            atomic,
+        } => {
+            let raw = read_input_or_stdin(notes.as_deref(), *stdin, "--notes")?;
+            let notes_arr = parse_yaml_or_json_array(&raw, "--notes")?;
+            let mut params = Map::new();
+            params.insert("notes".into(), Value::Array(notes_arr));
+            if *atomic {
+                params.insert("atomic".into(), json!(true));
+            }
+            Ok(call_plan("notes.createMany", Value::Object(params)))
         }
         NotesCmd::Validate {
             deck,
@@ -208,25 +325,19 @@ pub fn to_rpc_plan(cmd: &NotesCmd) -> Result<RpcPlan, CliError> {
             allow_duplicates,
             reject_empty_questions,
         } => {
-            let deck_ref = make_ref(deck.as_deref(), deck_id.as_deref(), "deck")?;
-            let note_type_ref =
-                make_ref(note_type.as_deref(), note_type_id.as_deref(), "noteType")?;
-            let fields_obj = parse_yaml_or_json_object(fields, "--fields")?;
-
-            let mut note = Map::new();
-            note.insert("deck".into(), deck_ref);
-            note.insert("noteType".into(), note_type_ref);
-            note.insert("fields".into(), Value::Object(fields_obj));
-            if !tags.is_empty() {
-                note.insert("tags".into(), json!(tags));
-            }
-            if *allow_duplicates {
-                note.insert("duplicates".into(), json!({ "allow": true }));
-            }
-            if let Some(reject) = reject_empty_questions {
-                note.insert("rejectEmptyQuestions".into(), json!(reject));
-            }
-
+            let note = build_note_input(
+                deck.as_deref(),
+                deck_id.as_deref(),
+                note_type.as_deref(),
+                note_type_id.as_deref(),
+                fields,
+                tags,
+                *allow_duplicates,
+                None,
+                None,
+                None,
+                *reject_empty_questions,
+            )?;
             Ok(call_plan("notes.validate", json!({ "note": note })))
         }
         NotesCmd::ValidateMany { notes, stdin } => {
@@ -457,5 +568,167 @@ mod tests {
         })
         .unwrap_err();
         assert_eq!(err.exit_code(), 2);
+    }
+
+    #[test]
+    fn notes_create_supports_yaml_json_refs_and_duplicate_policy() {
+        let p_yaml = assert_valid_call(
+            NotesCmd::Create {
+                deck: Some("Default".into()),
+                deck_id: None,
+                note_type: Some("Basic".into()),
+                note_type_id: None,
+                fields: "Front: What is Rust?\nBack: A systems language".into(),
+                tags: vec!["rust".into(), "lang".into()],
+                allow_duplicates: false,
+                duplicate_scope: None,
+                duplicate_deck: None,
+                duplicate_deck_id: None,
+                reject_empty_questions: None,
+            },
+            "notes.create",
+        );
+        assert_eq!(
+            p_yaml,
+            json!({
+                "deck": { "name": "Default" },
+                "noteType": { "name": "Basic" },
+                "fields": { "Front": "What is Rust?", "Back": "A systems language" },
+                "tags": ["rust", "lang"]
+            })
+        );
+
+        let p_json = assert_valid_call(
+            NotesCmd::Create {
+                deck: None,
+                deck_id: Some("10".into()),
+                note_type: None,
+                note_type_id: Some("20".into()),
+                fields: r#"{"Front":"Q","Back":"A"}"#.into(),
+                tags: vec![],
+                allow_duplicates: true,
+                duplicate_scope: Some("deck".into()),
+                duplicate_deck: None,
+                duplicate_deck_id: Some("11".into()),
+                reject_empty_questions: Some(false),
+            },
+            "notes.create",
+        );
+        assert_eq!(
+            p_json,
+            json!({
+                "deck": { "id": "10" },
+                "noteType": { "id": "20" },
+                "fields": { "Front": "Q", "Back": "A" },
+                "duplicates": {
+                    "allow": true,
+                    "scope": "deck",
+                    "deck": { "id": "11" }
+                },
+                "rejectEmptyQuestions": false
+            })
+        );
+
+        let err_missing_dup_deck = to_rpc_plan(&NotesCmd::Create {
+            deck: Some("Default".into()),
+            deck_id: None,
+            note_type: Some("Basic".into()),
+            note_type_id: None,
+            fields: r#"{"Front":"Q"}"#.into(),
+            tags: vec![],
+            allow_duplicates: false,
+            duplicate_scope: Some("deck".into()),
+            duplicate_deck: None,
+            duplicate_deck_id: None,
+            reject_empty_questions: None,
+        })
+        .unwrap_err();
+        assert_eq!(err_missing_dup_deck.exit_code(), 2);
+
+        let err_bad_scope = to_rpc_plan(&NotesCmd::Create {
+            deck: Some("Default".into()),
+            deck_id: None,
+            note_type: Some("Basic".into()),
+            note_type_id: None,
+            fields: r#"{"Front":"Q"}"#.into(),
+            tags: vec![],
+            allow_duplicates: false,
+            duplicate_scope: Some("invalid".into()),
+            duplicate_deck: None,
+            duplicate_deck_id: None,
+            reject_empty_questions: None,
+        })
+        .unwrap_err();
+        assert_eq!(err_bad_scope.exit_code(), 2);
+    }
+
+    #[test]
+    fn notes_create_many_parses_yaml_json_and_atomic() {
+        let yaml_notes = r#"
+- deck: { name: Default }
+  noteType: { name: Basic }
+  fields: { Front: Q1, Back: A1 }
+"#;
+        let p_yaml = assert_valid_call(
+            NotesCmd::CreateMany {
+                notes: Some(yaml_notes.into()),
+                stdin: false,
+                atomic: true,
+            },
+            "notes.createMany",
+        );
+        assert_eq!(p_yaml["notes"].as_array().unwrap().len(), 1);
+        assert_eq!(p_yaml["atomic"], json!(true));
+
+        let json_notes =
+            r#"[{"deck":{"id":"1"},"noteType":{"id":"2"},"fields":{"Front":"Q","Back":"A"}}]"#;
+        let p_json = assert_valid_call(
+            NotesCmd::CreateMany {
+                notes: Some(json_notes.into()),
+                stdin: false,
+                atomic: false,
+            },
+            "notes.createMany",
+        );
+        assert_eq!(p_json["notes"].as_array().unwrap().len(), 1);
+        assert!(p_json.get("atomic").is_none());
+    }
+
+    #[test]
+    fn notes_update_and_delete_produce_valid_plans() {
+        let p_update = assert_valid_call(
+            NotesCmd::Update {
+                id: "1001".into(),
+                fields: Some("Front: Updated".into()),
+                tags: Some(vec!["tag1".into()]),
+            },
+            "notes.update",
+        );
+        assert_eq!(
+            p_update,
+            json!({
+                "id": "1001",
+                "patch": {
+                    "fields": { "Front": "Updated" },
+                    "tags": ["tag1"]
+                }
+            })
+        );
+
+        let err_empty_patch = to_rpc_plan(&NotesCmd::Update {
+            id: "1001".into(),
+            fields: None,
+            tags: None,
+        })
+        .unwrap_err();
+        assert_eq!(err_empty_patch.exit_code(), 2);
+
+        let p_delete = assert_valid_call(
+            NotesCmd::Delete {
+                ids: vec!["1001".into(), "1002".into()],
+            },
+            "notes.delete",
+        );
+        assert_eq!(p_delete, json!({ "ids": ["1001", "1002"] }));
     }
 }
