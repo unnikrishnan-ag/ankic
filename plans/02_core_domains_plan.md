@@ -7,10 +7,10 @@ Modularize `src/commands/` into clean domain files and expand the core Anki doma
 - [x] **Phase 1 — Command Modularization & Collection, Operations, Decks, Deck Presets (`1.1`–`1.3`)**
 - [x] **Phase 2 — Complete `notes` Domain (All 12 Methods) (`2.1`–`2.3`)**
 - [x] **Phase 3 — Complete `cards` & `tags` Domains (12 Methods) (`3.1`–`3.2`)**
-- [ ] **Phase 4 — Complete `note-types` Domain (All 8 Methods) (`4.1`–`4.2`)**
+- [x] **Phase 4 — Complete `note-types` Domain (All 8 Methods) (`4.1`–`4.2`)**
 
 ### Handoff Context (Updated After Each Task)
-> **Next task**: `4.2` (Implement `note-types` Structural & Bulk Methods (`edit-structure`, `replace-text`, `delete-unused`))
+> **Next task**: `None` (All tasks in `plans/02_core_domains_plan.md` are complete)
 >
 > **Context from completed tasks**:
 > - **1.1**: Created `src/commands/helpers.rs` (`call_plan`, `make_ref`, `make_refs`, `make_sort`, `parse_yaml_or_json_value`, `parse_yaml_or_json_object`, `parse_yaml_or_json_array`, `read_input_or_stdin`), `src/commands/collection.rs` (`CollectionCmd`, `to_rpc_plan` covering `collection.get`, `collection.sync`, `collection.refresh`, `collection.checkIntegrity`, `collection.undo`), and `src/commands/operations.rs` (`OperationsCmd`, `to_rpc_plan` covering `operations.get`, `operations.cancel`, `RpcPlan::WaitOperation`). Wired `helpers`, `collection`, and `operations` into `src/commands/mod.rs` with `pub use collection::CollectionCmd; pub use operations::OperationsCmd;`.
@@ -22,6 +22,7 @@ Modularize `src/commands/` into clean domain files and expand the core Anki doma
 > - **3.1**: Extracted and completed `CardsCmd` and `to_rpc_plan` in `src/commands/cards.rs` covering all 7 `cards.*` methods (`cards.get`, `cards.getMany` via `get-many`, `cards.search` with `--sort-by`/`--sort-dir` and `--all` pagination, `cards.render`, `cards.move` with `--deck`/`--deck-id`, `cards.setSuspended` via `suspend`/`unsuspend`, and `cards.setFlags` with `0..=7` validation), wired `pub mod cards; pub use cards::CardsCmd;` into `src/commands/mod.rs` (removing inline `CardsCmd` and unused `search_plan`), and added unit tests validating all 7 methods against `schemas/api-v1.schema.json`.
 > - **3.2**: Created `src/commands/tags.rs` (`TagsCmd`, `to_rpc_plan` covering all 5 `tags.*` methods: `tags.list`, `tags.add`, `tags.remove` with non-empty `--note-id`/`--note-ids` and `--tag`/`--tags` validation, `tags.replace` enforcing `oneOf` between `--note-id`/`--note-ids` and `--all-notes`, and `tags.deleteUnused` via `delete-unused`), wired `pub mod tags; pub use tags::TagsCmd;` and `Commands::Tags` into `src/commands/mod.rs`, and added unit tests validating all 5 methods against `schemas/api-v1.schema.json`.
 > - **4.1**: Created `src/commands/note_types.rs` (`NoteTypesCmd`, `to_rpc_plan` covering `noteTypes.list`, `noteTypes.get`, `noteTypes.create` via `--spec`/`--stdin` or individual flags with shorthand string field normalization and optional `css`/`sortField`/`latexHeader`/`latexFooter`/`latexSvg`, `noteTypes.update` with `--patch` and/or individual `NoteTypePatch` flags and non-empty validation, and `noteTypes.getTemplateUsage` via `template-usage`), wired `pub mod note_types; pub use note_types::NoteTypesCmd;` and `Commands::NoteTypes` (`note-types`) into `src/commands/mod.rs`, and added unit tests validating all 5 methods against `schemas/api-v1.schema.json`.
+> - **4.2**: Completed `NoteTypesCmd` and `to_rpc_plan` in `src/commands/note_types.rs` with `EditStructure` (`edit-structure` -> `noteTypes.editStructure` parsing non-empty `--edits`/`--stdin` YAML/JSON arrays), `ReplaceText` (`replace-text` -> `noteTypes.replaceText` enforcing `oneOf` between `--name`/`--id` and `--all-note-types`, validating non-empty `--find` and unique `--target` values in `question|answer|css`), and `DeleteUnused` (`delete-unused` -> `noteTypes.deleteUnused` via repeatable `--name`/`--id`), plus unit tests validating all 8 `noteTypes.*` methods against `schemas/api-v1.schema.json`.
 
 > [!IMPORTANT]
 > ### Autonomous Execution Protocol: `"Continue with next task @plans/02_core_domains_plan.md"`
@@ -234,7 +235,7 @@ Modularize `src/commands/` into clean domain files and expand the core Anki doma
     - Add unit tests in `src/commands/note_types.rs` for `list`, `get`, `create`, `update`, and `template-usage`, verifying generated params against `schema::validate_method_params`.
   - **Verify**: `cargo test --all-targets && cargo clippy --all-targets -- -D warnings`
 
-- [ ] **4.2 Implement `note-types` Structural & Bulk Methods (`edit-structure`, `replace-text`, `delete-unused`)**
+- [x] **4.2 Implement `note-types` Structural & Bulk Methods (`edit-structure`, `replace-text`, `delete-unused`)**
   - **File(s)**:
     - `src/commands/note_types.rs` (modify)
   - **Scope**:

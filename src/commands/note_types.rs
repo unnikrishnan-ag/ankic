@@ -4,7 +4,8 @@ use serde_json::{json, Map, Value};
 use crate::error::CliError;
 
 use super::helpers::{
-    call_plan, make_ref, parse_yaml_or_json_array, parse_yaml_or_json_object, read_input_or_stdin,
+    call_plan, make_ref, make_refs, parse_yaml_or_json_array, parse_yaml_or_json_object,
+    read_input_or_stdin,
 };
 use super::RpcPlan;
 
@@ -96,6 +97,54 @@ pub enum NoteTypesCmd {
         /// Note type ID
         #[arg(long, conflicts_with = "name")]
         id: Option<String>,
+    },
+    /// Apply structural edits (fields/templates) to a note type
+    #[command(name = "edit-structure")]
+    EditStructure {
+        /// Note type name
+        #[arg(long, conflicts_with = "id")]
+        name: Option<String>,
+        /// Note type ID
+        #[arg(long, conflicts_with = "name")]
+        id: Option<String>,
+        /// YAML or JSON array of StructureEdit objects
+        #[arg(long, conflicts_with = "stdin")]
+        edits: Option<String>,
+        /// Read YAML or JSON array of StructureEdit objects from stdin
+        #[arg(long, conflicts_with = "edits")]
+        stdin: bool,
+    },
+    /// Find and replace text across note type templates and CSS
+    #[command(name = "replace-text")]
+    ReplaceText {
+        /// Text to find (non-empty)
+        #[arg(long)]
+        find: String,
+        /// Replacement text
+        #[arg(long)]
+        replace: String,
+        /// Target note type name (repeatable)
+        #[arg(long = "name", alias = "names", value_name = "NAME", conflicts_with = "all_note_types")]
+        names: Vec<String>,
+        /// Target note type ID (repeatable)
+        #[arg(long = "id", alias = "ids", value_name = "ID", conflicts_with = "all_note_types")]
+        ids: Vec<String>,
+        /// Replace across all note types in the collection
+        #[arg(long, conflicts_with_all = ["names", "ids"])]
+        all_note_types: bool,
+        /// Target sections to update: question, answer, css (repeatable)
+        #[arg(long = "target", alias = "targets", value_name = "TARGET")]
+        targets: Vec<String>,
+    },
+    /// Delete unused note types by name or ID
+    #[command(name = "delete-unused")]
+    DeleteUnused {
+        /// Note type name to delete if unused (repeatable)
+        #[arg(long = "name", alias = "names", value_name = "NAME")]
+        names: Vec<String>,
+        /// Note type ID to delete if unused (repeatable)
+        #[arg(long = "id", alias = "ids", value_name = "ID")]
+        ids: Vec<String>,
     },
 }
 
@@ -326,6 +375,92 @@ pub fn to_rpc_plan(cmd: &NoteTypesCmd) -> Result<RpcPlan, CliError> {
             "noteTypes.getTemplateUsage",
             json!({ "noteType": make_ref(name.as_deref(), id.as_deref(), "noteType")? }),
         )),
+        NoteTypesCmd::EditStructure {
+            name,
+            id,
+            edits,
+            stdin,
+        } => {
+            let note_type = make_ref(name.as_deref(), id.as_deref(), "noteType")?;
+            let raw = read_input_or_stdin(edits.as_deref(), *stdin, "--edits")?;
+            let edits_array = parse_yaml_or_json_array(&raw, "--edits")?;
+            if edits_array.is_empty() {
+                return Err(CliError::InvalidInput(
+                    "--edits must contain at least one edit".into(),
+                ));
+            }
+            Ok(call_plan(
+                "noteTypes.editStructure",
+                json!({
+                    "noteType": note_type,
+                    "edits": edits_array,
+                }),
+            ))
+        }
+        NoteTypesCmd::ReplaceText {
+            find,
+            replace,
+            names,
+            ids,
+            all_note_types,
+            targets,
+        } => {
+            if find.is_empty() {
+                return Err(CliError::InvalidInput(
+                    "--find must not be empty".into(),
+                ));
+            }
+            let mut params = Map::new();
+            params.insert("find".into(), json!(find));
+            params.insert("replace".into(), json!(replace));
+
+            let has_refs = !names.is_empty() || !ids.is_empty();
+            match (*all_note_types, has_refs) {
+                (true, false) => {
+                    params.insert("allNoteTypes".into(), json!(true));
+                }
+                (false, true) => {
+                    params.insert(
+                        "noteTypes".into(),
+                        Value::Array(make_refs(names, ids, "noteType")?),
+                    );
+                }
+                _ => {
+                    return Err(CliError::InvalidInput(
+                        "Specify either --name/--id or --all-note-types (mutually exclusive)"
+                            .into(),
+                    ));
+                }
+            }
+
+            if !targets.is_empty() {
+                let mut seen = Vec::with_capacity(targets.len());
+                for target in targets {
+                    match target.as_str() {
+                        "question" | "answer" | "css" => {
+                            if seen.contains(target) {
+                                return Err(CliError::InvalidInput(format!(
+                                    "Duplicate --target '{target}'"
+                                )));
+                            }
+                            seen.push(target.clone());
+                        }
+                        other => {
+                            return Err(CliError::InvalidInput(format!(
+                                "Invalid --target '{other}': expected 'question', 'answer', or 'css'"
+                            )));
+                        }
+                    }
+                }
+                params.insert("targets".into(), json!(targets));
+            }
+
+            Ok(call_plan("noteTypes.replaceText", Value::Object(params)))
+        }
+        NoteTypesCmd::DeleteUnused { names, ids } => Ok(call_plan(
+            "noteTypes.deleteUnused",
+            json!({ "noteTypes": make_refs(names, ids, "noteType")? }),
+        )),
     }
 }
 
@@ -505,5 +640,116 @@ mod tests {
         })
         .unwrap_err();
         assert_eq!(err.exit_code(), 2);
+    }
+
+    #[test]
+    fn edit_structure_validates_against_schema_and_rejects_empty_edits() {
+        assert_call_valid(
+            NoteTypesCmd::EditStructure {
+                name: Some("Basic".into()),
+                id: None,
+                edits: Some(
+                    "- op: addField\n  field:\n    name: Hint\n- op: moveField\n  name: Hint\n  index: 1\n".into(),
+                ),
+                stdin: false,
+            },
+            "noteTypes.editStructure",
+            json!({
+                "noteType": { "name": "Basic" },
+                "edits": [
+                    { "op": "addField", "field": { "name": "Hint" } },
+                    { "op": "moveField", "name": "Hint", "index": 1 }
+                ]
+            }),
+        );
+
+        let err = to_rpc_plan(&NoteTypesCmd::EditStructure {
+            name: Some("Basic".into()),
+            id: None,
+            edits: Some("[]".into()),
+            stdin: false,
+        })
+        .unwrap_err();
+        assert_eq!(err.exit_code(), 2);
+    }
+
+    #[test]
+    fn replace_text_handles_both_modes_targets_and_validation() {
+        assert_call_valid(
+            NoteTypesCmd::ReplaceText {
+                find: "old-class".into(),
+                replace: "new-class".into(),
+                names: vec!["Basic".into()],
+                ids: vec!["1700000000000".into()],
+                all_note_types: false,
+                targets: vec!["question".into(), "css".into()],
+            },
+            "noteTypes.replaceText",
+            json!({
+                "find": "old-class",
+                "replace": "new-class",
+                "noteTypes": [
+                    { "name": "Basic" },
+                    { "id": "1700000000000" }
+                ],
+                "targets": ["question", "css"]
+            }),
+        );
+
+        assert_call_valid(
+            NoteTypesCmd::ReplaceText {
+                find: "foo".into(),
+                replace: "".into(),
+                names: vec![],
+                ids: vec![],
+                all_note_types: true,
+                targets: vec![],
+            },
+            "noteTypes.replaceText",
+            json!({
+                "find": "foo",
+                "replace": "",
+                "allNoteTypes": true
+            }),
+        );
+
+        let missing_scope = to_rpc_plan(&NoteTypesCmd::ReplaceText {
+            find: "foo".into(),
+            replace: "bar".into(),
+            names: vec![],
+            ids: vec![],
+            all_note_types: false,
+            targets: vec![],
+        })
+        .unwrap_err();
+        assert_eq!(missing_scope.exit_code(), 2);
+
+        let both_scopes = to_rpc_plan(&NoteTypesCmd::ReplaceText {
+            find: "foo".into(),
+            replace: "bar".into(),
+            names: vec!["Basic".into()],
+            ids: vec![],
+            all_note_types: true,
+            targets: vec![],
+        })
+        .unwrap_err();
+        assert_eq!(both_scopes.exit_code(), 2);
+    }
+
+    #[test]
+    fn delete_unused_validates_against_schema() {
+        assert_call_valid(
+            NoteTypesCmd::DeleteUnused {
+                names: vec!["Unused A".into()],
+                ids: vec!["1700000000001".into()],
+            },
+            "noteTypes.deleteUnused",
+            json!({
+                "noteTypes": [
+                    { "name": "Unused A" },
+                    { "id": "1700000000001" }
+                ]
+            }),
+        );
     }
 }
