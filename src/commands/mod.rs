@@ -11,6 +11,7 @@ pub mod cards;
 pub mod collection;
 pub mod deck_presets;
 pub mod decks;
+pub mod gui;
 pub mod helpers;
 pub mod media;
 pub mod note_types;
@@ -28,6 +29,7 @@ pub use cards::CardsCmd;
 pub use collection::CollectionCmd;
 pub use deck_presets::DeckPresetsCmd;
 pub use decks::DecksCmd;
+pub use gui::GuiCmd;
 pub use media::MediaCmd;
 pub use note_types::NoteTypesCmd;
 pub use notes::NotesCmd;
@@ -193,6 +195,12 @@ pub enum Commands {
         command: AdvancedCmd,
     },
 
+    /// GUI control commands (application, browser, editors, reviewer)
+    Gui {
+        #[command(subcommand)]
+        command: GuiCmd,
+    },
+
     /// Async operation tracking (get, wait, cancel)
     Operations {
         #[command(subcommand)]
@@ -353,6 +361,7 @@ pub fn to_rpc_plan(cmd: &Commands) -> Result<RpcPlan, CliError> {
         Commands::Profiles { command } => profiles::to_rpc_plan(command),
         Commands::Access { command } => advanced::to_rpc_plan_access(command),
         Commands::Advanced { command } => advanced::to_rpc_plan_advanced(command),
+        Commands::Gui { command } => gui::to_rpc_plan(command),
         Commands::Operations { command } => operations::to_rpc_plan(command),
         Commands::Batch(args) => {
             let requests = parse_batch_requests(args)?;

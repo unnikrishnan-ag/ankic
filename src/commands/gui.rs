@@ -8,6 +8,7 @@ use super::RpcPlan;
 
 const VALID_NAVIGATE_VIEWS: [&str; 3] = ["deckBrowser", "deckOverview", "review"];
 const VALID_DRAFT_MODES: [&str; 2] = ["replace", "append"];
+const VALID_RATINGS: [&str; 4] = ["again", "hard", "good", "easy"];
 
 #[derive(Subcommand)]
 pub enum GuiCmd {
@@ -160,6 +161,53 @@ pub enum GuiCmd {
         #[arg(long, default_value_t = 60)]
         timeout: u64,
     },
+    /// Get the current reviewer state (active card, phase, stateToken)
+    #[command(name = "reviewer-get")]
+    ReviewerGet,
+    /// Start the answer timer for the current reviewer card
+    #[command(name = "reviewer-start-timer")]
+    ReviewerStartTimer {
+        /// Reviewer state token from reviewer.get
+        #[arg(long)]
+        state_token: String,
+    },
+    /// Show the question side of the current reviewer card
+    #[command(name = "reviewer-show-question")]
+    ReviewerShowQuestion {
+        /// Reviewer state token from reviewer.get
+        #[arg(long)]
+        state_token: String,
+    },
+    /// Show the answer side of the current reviewer card
+    #[command(name = "reviewer-show-answer")]
+    ReviewerShowAnswer {
+        /// Reviewer state token from reviewer.get
+        #[arg(long)]
+        state_token: String,
+    },
+    /// Submit an answer rating for the current reviewer card
+    #[command(name = "reviewer-answer")]
+    ReviewerAnswer {
+        /// Reviewer state token from reviewer.get
+        #[arg(long)]
+        state_token: String,
+        /// Answer rating (again, hard, good, easy)
+        #[arg(long)]
+        rating: String,
+        /// Return the OperationHandle immediately without polling operations.get
+        #[arg(long)]
+        no_wait: bool,
+        /// Operation polling timeout in seconds
+        #[arg(long, default_value_t = 60)]
+        timeout: u64,
+    },
+    /// Play audio for the current reviewer card
+    #[command(name = "reviewer-play-audio")]
+    ReviewerPlayAudio {
+        /// Reviewer state token from reviewer.get
+        #[arg(long)]
+        state_token: String,
+    },
 }
 
 fn validate_non_empty_ids(ids: &[String], flag_name: &str) -> Result<(), CliError> {
@@ -178,6 +226,20 @@ fn validate_non_empty_tags(tags: &[String]) -> Result<(), CliError> {
         ));
     }
     Ok(())
+}
+
+fn validate_state_token(state_token: &str) -> Result<(), CliError> {
+    if state_token.trim().is_empty() {
+        return Err(CliError::InvalidInput(
+            "State token must not be empty".into(),
+        ));
+    }
+    Ok(())
+}
+
+fn reviewer_state_plan(method: &str, state_token: &str) -> Result<RpcPlan, CliError> {
+    validate_state_token(state_token)?;
+    Ok(call_plan(method, json!({ "stateToken": state_token })))
 }
 
 /// Translate a `gui` subcommand into an `RpcPlan` without performing network I/O.
@@ -438,5 +500,410 @@ pub fn to_rpc_plan(cmd: &GuiCmd) -> Result<RpcPlan, CliError> {
                 timeout_secs: *timeout,
             })
         }
+        GuiCmd::ReviewerGet => Ok(call_plan("reviewer.get", json!({}))),
+        GuiCmd::ReviewerStartTimer { state_token } => {
+            reviewer_state_plan("reviewer.startTimer", state_token)
+        }
+        GuiCmd::ReviewerShowQuestion { state_token } => {
+            reviewer_state_plan("reviewer.showQuestion", state_token)
+        }
+        GuiCmd::ReviewerShowAnswer { state_token } => {
+            reviewer_state_plan("reviewer.showAnswer", state_token)
+        }
+        GuiCmd::ReviewerAnswer {
+            state_token,
+            rating,
+            no_wait,
+            timeout,
+        } => {
+            validate_state_token(state_token)?;
+            if !VALID_RATINGS.contains(&rating.as_str()) {
+                return Err(CliError::InvalidInput(format!(
+                    "Invalid rating '{rating}': expected one of {}",
+                    VALID_RATINGS.join(", ")
+                )));
+            }
+            Ok(RpcPlan::Call {
+                method: "reviewer.answer".into(),
+                params: json!({
+                    "stateToken": state_token,
+                    "rating": rating,
+                }),
+                wait: !no_wait,
+                timeout_secs: *timeout,
+            })
+        }
+        GuiCmd::ReviewerPlayAudio { state_token } => {
+            reviewer_state_plan("reviewer.playAudio", state_token)
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::schema;
+
+    fn assert_call_schema(cmd: &GuiCmd, expected_method: &str, expected_wait: bool) -> Value {
+        let plan = to_rpc_plan(cmd).unwrap();
+        match plan {
+            RpcPlan::Call {
+                method,
+                params,
+                wait,
+                ..
+            } => {
+                assert_eq!(method, expected_method);
+                assert_eq!(wait, expected_wait);
+                schema::validate_method_params(&method, &params).unwrap();
+                params
+            }
+            other => panic!("Expected RpcPlan::Call, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn navigate_deck_browser_overview_and_review() {
+        let params = assert_call_schema(
+            &GuiCmd::Navigate {
+                view: "deckBrowser".into(),
+                deck_name: None,
+                deck_id: None,
+                no_wait: false,
+                timeout: 60,
+            },
+            "application.navigate",
+            true,
+        );
+        assert_eq!(params, json!({ "view": "deckBrowser" }));
+
+        let params = assert_call_schema(
+            &GuiCmd::Navigate {
+                view: "deckOverview".into(),
+                deck_name: Some("Default".into()),
+                deck_id: None,
+                no_wait: true,
+                timeout: 60,
+            },
+            "application.navigate",
+            false,
+        );
+        assert_eq!(
+            params,
+            json!({ "view": "deckOverview", "deck": { "name": "Default" } })
+        );
+
+        let params = assert_call_schema(
+            &GuiCmd::Navigate {
+                view: "review".into(),
+                deck_name: None,
+                deck_id: Some("1".into()),
+                no_wait: false,
+                timeout: 60,
+            },
+            "application.navigate",
+            true,
+        );
+        assert_eq!(params, json!({ "view": "review", "deck": { "id": "1" } }));
+    }
+
+    #[test]
+    fn navigate_rejects_invalid_deck_combinations() {
+        let err = to_rpc_plan(&GuiCmd::Navigate {
+            view: "deckBrowser".into(),
+            deck_name: Some("Default".into()),
+            deck_id: None,
+            no_wait: false,
+            timeout: 60,
+        })
+        .unwrap_err();
+        assert!(matches!(err, CliError::InvalidInput(_)));
+
+        let err = to_rpc_plan(&GuiCmd::Navigate {
+            view: "review".into(),
+            deck_name: None,
+            deck_id: None,
+            no_wait: false,
+            timeout: 60,
+        })
+        .unwrap_err();
+        assert!(matches!(err, CliError::InvalidInput(_)));
+    }
+
+    #[test]
+    fn import_file_and_exit() {
+        let params = assert_call_schema(
+            &GuiCmd::ImportFile {
+                path: None,
+                no_wait: false,
+                timeout: 300,
+            },
+            "application.importFile",
+            true,
+        );
+        assert_eq!(params, json!({}));
+
+        let params = assert_call_schema(
+            &GuiCmd::ImportFile {
+                path: Some("/tmp/deck.apkg".into()),
+                no_wait: true,
+                timeout: 300,
+            },
+            "application.importFile",
+            false,
+        );
+        assert_eq!(params, json!({ "path": "/tmp/deck.apkg" }));
+
+        let params = assert_call_schema(&GuiCmd::Exit, "application.exit", false);
+        assert_eq!(params, json!({}));
+    }
+
+    #[test]
+    fn browser_open_selection_and_select() {
+        let params = assert_call_schema(
+            &GuiCmd::BrowserOpen {
+                query: Some("deck:Default".into()),
+                sort_by: Some("cardDue".into()),
+                sort_dir: Some("ascending".into()),
+                no_wait: false,
+                timeout: 60,
+            },
+            "browser.open",
+            true,
+        );
+        assert_eq!(
+            params,
+            json!({
+                "query": "deck:Default",
+                "sort": { "column": "cardDue", "direction": "ascending" }
+            })
+        );
+
+        let params = assert_call_schema(&GuiCmd::BrowserSelection, "browser.getSelection", false);
+        assert_eq!(params, json!({}));
+
+        let params = assert_call_schema(
+            &GuiCmd::BrowserSelect {
+                card_ids: vec!["101".into(), "102".into()],
+                note_ids: vec![],
+                no_wait: false,
+                timeout: 60,
+            },
+            "browser.select",
+            true,
+        );
+        assert_eq!(params, json!({ "cardIds": ["101", "102"] }));
+
+        let params = assert_call_schema(
+            &GuiCmd::BrowserSelect {
+                card_ids: vec![],
+                note_ids: vec!["201".into()],
+                no_wait: true,
+                timeout: 60,
+            },
+            "browser.select",
+            false,
+        );
+        assert_eq!(params, json!({ "noteIds": ["201"] }));
+    }
+
+    #[test]
+    fn browser_select_rejects_conflict_and_empty() {
+        let err = to_rpc_plan(&GuiCmd::BrowserSelect {
+            card_ids: vec!["101".into()],
+            note_ids: vec!["201".into()],
+            no_wait: false,
+            timeout: 60,
+        })
+        .unwrap_err();
+        assert!(matches!(err, CliError::InvalidInput(_)));
+
+        let err = to_rpc_plan(&GuiCmd::BrowserSelect {
+            card_ids: vec![],
+            note_ids: vec![],
+            no_wait: false,
+            timeout: 60,
+        })
+        .unwrap_err();
+        assert!(matches!(err, CliError::InvalidInput(_)));
+    }
+
+    #[test]
+    fn editors_open_note_open_add_and_update_draft() {
+        let params = assert_call_schema(
+            &GuiCmd::EditorOpenNote {
+                note_id: "12345".into(),
+                no_wait: false,
+                timeout: 60,
+            },
+            "editors.openNote",
+            true,
+        );
+        assert_eq!(params, json!({ "noteId": "12345" }));
+
+        let params = assert_call_schema(
+            &GuiCmd::EditorOpenAdd {
+                note: None,
+                deck_name: None,
+                deck_id: None,
+                note_type_name: None,
+                note_type_id: None,
+                fields: None,
+                tags: vec![],
+                no_wait: false,
+                timeout: 60,
+            },
+            "editors.openAdd",
+            true,
+        );
+        assert_eq!(params, json!({}));
+
+        let params = assert_call_schema(
+            &GuiCmd::EditorOpenAdd {
+                note: None,
+                deck_name: Some("Default".into()),
+                deck_id: None,
+                note_type_name: Some("Basic".into()),
+                note_type_id: None,
+                fields: Some("Front: Hello\nBack: World".into()),
+                tags: vec!["vocab".into()],
+                no_wait: true,
+                timeout: 60,
+            },
+            "editors.openAdd",
+            false,
+        );
+        assert_eq!(
+            params,
+            json!({
+                "note": {
+                    "deck": { "name": "Default" },
+                    "noteType": { "name": "Basic" },
+                    "fields": { "Front": "Hello", "Back": "World" },
+                    "tags": ["vocab"]
+                }
+            })
+        );
+
+        let params = assert_call_schema(
+            &GuiCmd::EditorUpdateDraft {
+                editor_id: "ed-1".into(),
+                patch: Some("{fields: {Front: Updated}}".into()),
+                deck_name: Some("Japanese".into()),
+                deck_id: None,
+                note_type_name: None,
+                note_type_id: None,
+                fields: None,
+                tags: Some(vec!["tag1".into()]),
+                mode: Some("append".into()),
+                no_wait: false,
+                timeout: 60,
+            },
+            "editors.updateDraft",
+            true,
+        );
+        assert_eq!(
+            params,
+            json!({
+                "editorId": "ed-1",
+                "patch": {
+                    "fields": { "Front": "Updated" },
+                    "deck": { "name": "Japanese" },
+                    "tags": ["tag1"]
+                },
+                "mode": "append"
+            })
+        );
+    }
+
+    #[test]
+    fn editor_update_draft_rejects_empty_patch() {
+        let err = to_rpc_plan(&GuiCmd::EditorUpdateDraft {
+            editor_id: "ed-1".into(),
+            patch: None,
+            deck_name: None,
+            deck_id: None,
+            note_type_name: None,
+            note_type_id: None,
+            fields: None,
+            tags: None,
+            mode: None,
+            no_wait: false,
+            timeout: 60,
+        })
+        .unwrap_err();
+        assert!(matches!(err, CliError::InvalidInput(_)));
+    }
+
+    #[test]
+    fn reviewer_subcommands_validate_against_schema() {
+        let params = assert_call_schema(&GuiCmd::ReviewerGet, "reviewer.get", false);
+        assert_eq!(params, json!({}));
+
+        let params = assert_call_schema(
+            &GuiCmd::ReviewerStartTimer {
+                state_token: "tok-1".into(),
+            },
+            "reviewer.startTimer",
+            false,
+        );
+        assert_eq!(params, json!({ "stateToken": "tok-1" }));
+
+        let params = assert_call_schema(
+            &GuiCmd::ReviewerShowQuestion {
+                state_token: "tok-1".into(),
+            },
+            "reviewer.showQuestion",
+            false,
+        );
+        assert_eq!(params, json!({ "stateToken": "tok-1" }));
+
+        let params = assert_call_schema(
+            &GuiCmd::ReviewerShowAnswer {
+                state_token: "tok-1".into(),
+            },
+            "reviewer.showAnswer",
+            false,
+        );
+        assert_eq!(params, json!({ "stateToken": "tok-1" }));
+
+        let params = assert_call_schema(
+            &GuiCmd::ReviewerAnswer {
+                state_token: "tok-1".into(),
+                rating: "good".into(),
+                no_wait: false,
+                timeout: 60,
+            },
+            "reviewer.answer",
+            true,
+        );
+        assert_eq!(params, json!({ "stateToken": "tok-1", "rating": "good" }));
+
+        let params = assert_call_schema(
+            &GuiCmd::ReviewerPlayAudio {
+                state_token: "tok-1".into(),
+            },
+            "reviewer.playAudio",
+            false,
+        );
+        assert_eq!(params, json!({ "stateToken": "tok-1" }));
+    }
+
+    #[test]
+    fn reviewer_rejects_invalid_rating_and_empty_state_token() {
+        let err = to_rpc_plan(&GuiCmd::ReviewerAnswer {
+            state_token: "tok-1".into(),
+            rating: "skip".into(),
+            no_wait: false,
+            timeout: 60,
+        })
+        .unwrap_err();
+        assert!(matches!(err, CliError::InvalidInput(_)));
+
+        let err = to_rpc_plan(&GuiCmd::ReviewerShowAnswer {
+            state_token: "   ".into(),
+        })
+        .unwrap_err();
+        assert!(matches!(err, CliError::InvalidInput(_)));
     }
 }

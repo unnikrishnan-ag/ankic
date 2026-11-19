@@ -7,10 +7,10 @@ Implement first-class, schema-validated CLI subcommands for all 12 remaining Ank
 - [x] **Phase 1 — Media & Packages Subcommands (`1.1`–`1.2`)**
 - [x] **Phase 2 — Scheduling & Reviews Subcommands (`2.1`–`2.3`)**
 - [x] **Phase 3 — Statistics, Profiles, Access & Advanced Subcommands (`3.1`–`3.2`)**
-- [ ] **Phase 4 — GUI Subcommands (`application`, `browser`, `editors`, `reviewer`) (`4.1`–`4.2`)**
+- [x] **Phase 4 — GUI Subcommands (`application`, `browser`, `editors`, `reviewer`) (`4.1`–`4.2`)**
 
 ### Handoff Context (Updated After Each Task)
-> **Next task**: `4.2` (Add `reviewer` Subcommands to `src/commands/gui.rs`, Wire `Gui` into `Commands` & Add Unit Tests)
+> **Next task**: `None` (Plan 3 complete)
 >
 > **Context from completed tasks**:
 > - **Task 1.1 (`src/commands/media.rs`, `src/commands/mod.rs`)**: Implemented `MediaCmd` (`List`, `Get`, `Store`, `Delete`, `Directory`) and `pub fn to_rpc_plan(cmd: &MediaCmd) -> Result<RpcPlan, CliError>` covering all 5 `media.*` methods (`media.list`, `media.get`, `media.store`, `media.delete`, `media.getDirectory`), wired into `Commands::Media` (`pub use media::MediaCmd`). `Store` enforces mutually exclusive `--data` (alias `--data-base64`) / `--path` / `--url`, optional `--collision` (`rename|replace|error`), paired `--skip-hash-alg` (`md5|sha256`) + `--skip-hash-digest`, and `--no-wait`/`--timeout` (`wait: !no_wait`, default `300`). Unit tests validate all 5 methods and error cases against `schema::validate_method_params`.
@@ -21,6 +21,7 @@ Implement first-class, schema-validated CLI subcommands for all 12 remaining Ank
 > - **Task 3.1 (`src/commands/statistics.rs`, `src/commands/profiles.rs`, `src/commands/mod.rs`)**: Implemented `StatisticsCmd` (`Today`, `ReviewDays`, `Summary`, `Html`) and `pub fn to_rpc_plan(cmd: &StatisticsCmd) -> Result<RpcPlan, CliError>` covering all 4 `statistics.*` methods (`statistics.getToday`, `statistics.getReviewDays`, `statistics.getSummary`, `statistics.getHtml`), plus `ProfilesCmd` (`List`, `Active`, `Switch`) and `pub fn to_rpc_plan(cmd: &ProfilesCmd) -> Result<RpcPlan, CliError>` covering all 3 `profiles.*` application-scoped methods (`profiles.list`, `profiles.getActive`, `profiles.switch` with `--no-wait`/`--timeout` default `300`), wired into `Commands::Statistics` and `Commands::Profiles`. Unit tests validate all 7 methods and empty-input error cases against `schema::validate_method_params`.
 > - **Task 3.2 (`src/commands/advanced.rs`, `src/commands/mod.rs`)**: Implemented `AccessCmd` (`RequestPermission`) with `pub fn to_rpc_plan_access(cmd: &AccessCmd) -> Result<RpcPlan, CliError>` covering `access.requestPermission` (`scope: "application"`), plus `AdvancedCmd` (`CardsUpdate`, `ReviewsImport`) with `pub fn to_rpc_plan_advanced(cmd: &AdvancedCmd) -> Result<RpcPlan, CliError>` covering `advanced.cards.update` (merging `--patch` YAML/JSON object with `--interval-days`, `--sm2-ease-permille`, `--repetitions`, `--lapses`, `--remaining-steps`, `--fsrs-memory`, `--custom-data`, rejecting empty patch/card ID) and `advanced.reviews.import` (parsing `--reviews`/`--stdin` YAML/JSON array with `--no-wait`/`--timeout` default `300`), wired into `Commands::Access` and `Commands::Advanced` (`pub use advanced::{AccessCmd, AdvancedCmd}`). Unit tests validate all 3 methods and error cases against `schema::validate_method_params`.
 > - **Task 4.1 (`src/commands/gui.rs`)**: Implemented `GuiCmd` and `pub fn to_rpc_plan(cmd: &GuiCmd) -> Result<RpcPlan, CliError>` covering all 9 `application.*`, `browser.*`, and `editors.*` methods: `Navigate` (`application.navigate`, enforcing `deckBrowser` forbids deck while `deckOverview`/`review` require `deck`), `ImportFile` (`application.importFile`, optional `--path`, default timeout `300`), `Exit` (`application.exit`), `BrowserOpen` (`browser.open`, optional `--query` and `make_sort`), `BrowserSelection` (`browser.getSelection`), `BrowserSelect` (`browser.select`, enforcing `oneOf` between `--card-id` and `--note-id`), `EditorOpenNote` (`editors.openNote`), `EditorOpenAdd` (`editors.openAdd`, empty, `--note`, or `DraftInput` flags), and `EditorUpdateDraft` (`editors.updateDraft`, `EditorPatch` from `--patch` and/or convenience flags, rejecting empty patch, optional `--mode` in `replace|append`). Not yet wired into `src/commands/mod.rs` (deferred to Task 4.2).
+> - **Task 4.2 (`src/commands/gui.rs`, `src/commands/mod.rs`)**: Extended `GuiCmd` and `to_rpc_plan` with all 6 `reviewer.*` subcommands (`ReviewerGet` -> `reviewer.get`, `ReviewerStartTimer` -> `reviewer.startTimer`, `ReviewerShowQuestion` -> `reviewer.showQuestion`, `ReviewerShowAnswer` -> `reviewer.showAnswer`, `ReviewerAnswer` -> `reviewer.answer` with `rating` in `again|hard|good|easy` and `--no-wait`/`--timeout` default `60`, `ReviewerPlayAudio` -> `reviewer.playAudio`, validating non-empty `--state-token`). Wired `pub mod gui;`, `pub use gui::GuiCmd;`, and `Commands::Gui` into `src/commands/mod.rs`. Added comprehensive unit tests in `src/commands/gui.rs` covering all 15 GUI methods and error cases against `schema::validate_method_params`.
 
 > [!IMPORTANT]
 > ### Autonomous Execution Protocol: `"Continue with next task @plans/03_extended_domains_plan.md"`
@@ -232,7 +233,7 @@ Implement first-class, schema-validated CLI subcommands for all 12 remaining Ank
           - Params: `{"editorId": editor_id, "patch": patch}` (plus optional `"mode"`).
   - **Verify**: `cargo test --all-targets && cargo clippy --all-targets -- -D warnings`
 
-- [ ] **4.2 Add `reviewer` Subcommands to `src/commands/gui.rs`, Wire `Gui` into `Commands` & Add Unit Tests**
+- [x] **4.2 Add `reviewer` Subcommands to `src/commands/gui.rs`, Wire `Gui` into `Commands` & Add Unit Tests**
   - **File(s)**:
     - `src/commands/gui.rs` (modify)
     - `src/commands/mod.rs` (modify)
