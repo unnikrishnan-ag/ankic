@@ -1,7 +1,6 @@
-pub mod client;
+pub use anki_connect_client::{client, error, schema};
+
 pub mod commands;
-pub mod error;
 pub mod output;
-pub mod schema;
 
 pub use commands::{BatchMode, Cli, RpcPlan};

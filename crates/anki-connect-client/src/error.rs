@@ -42,7 +42,7 @@ pub enum CliError {
     Json(#[from] serde_json::Error),
 
     #[error("YAML serialization error: {0}")]
-    Yaml(#[from] serde_norway::Error),
+    Yaml(String),
 }
 
 impl CliError {
@@ -126,12 +126,11 @@ mod tests {
     #[test]
     fn exit_codes_are_deterministic() {
         let json_err = serde_json::from_str::<Value>("{invalid").unwrap_err();
-        let yaml_err = serde_norway::from_str::<Value>(":\n  - [unclosed").unwrap_err();
 
         assert_eq!(CliError::InvalidInput("bad".into()).exit_code(), 2);
         assert_eq!(CliError::SchemaNotFound("missing".into()).exit_code(), 2);
         assert_eq!(CliError::Json(json_err).exit_code(), 2);
-        assert_eq!(CliError::Yaml(yaml_err).exit_code(), 2);
+        assert_eq!(CliError::Yaml("invalid yaml".into()).exit_code(), 2);
 
         assert_eq!(
             CliError::HttpStatus {
@@ -244,8 +243,7 @@ mod tests {
             })
         );
 
-        let yaml_err = serde_norway::from_str::<Value>(":\n  - [unclosed").unwrap_err();
-        let cli_err = CliError::Yaml(yaml_err);
+        let cli_err = CliError::Yaml("invalid yaml".into());
         let expected_msg = cli_err.to_string();
         assert_eq!(
             cli_err.to_json(),

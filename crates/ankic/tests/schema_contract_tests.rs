@@ -7,7 +7,7 @@ use clap::Parser;
 use serde_json::{json, Value};
 
 static ROOT_SCHEMA: LazyLock<Value> = LazyLock::new(|| {
-    serde_json::from_str(include_str!("../schemas/api-v1.schema.json"))
+    serde_json::from_str(include_str!("../../../schemas/api-v1.schema.json"))
         .expect("schemas/api-v1.schema.json must be valid JSON")
 });
 

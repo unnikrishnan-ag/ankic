@@ -43,7 +43,8 @@ impl OutputFormat {
 pub fn format_value(value: &Value, format: OutputFormat) -> Result<String, CliError> {
     match format {
         OutputFormat::Yaml => {
-            let rendered = serde_norway::to_string(value)?;
+            let rendered =
+                serde_norway::to_string(value).map_err(|e| CliError::Yaml(e.to_string()))?;
             Ok(rendered.trim_end().to_string())
         }
         OutputFormat::Json => Ok(serde_json::to_string(value)?),

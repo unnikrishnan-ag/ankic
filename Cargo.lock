@@ -26,15 +26,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "anki-connect-client"
+version = "0.1.0"
+dependencies = [
+ "mockito",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
 name = "ankic"
 version = "0.1.0"
 dependencies = [
+ "anki-connect-client",
  "assert_cmd",
  "clap",
  "jsonschema",
  "mockito",
  "predicates",
- "reqwest",
  "serde",
  "serde_json",
  "serde_norway",

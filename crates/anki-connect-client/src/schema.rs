@@ -5,7 +5,7 @@ use serde_json::{json, Map, Value};
 
 use crate::error::CliError;
 
-const RAW_SCHEMA: &str = include_str!("../schemas/api-v1.schema.json");
+const RAW_SCHEMA: &str = include_str!("../../../schemas/api-v1.schema.json");
 
 static SCHEMA: LazyLock<Value> = LazyLock::new(|| {
     serde_json::from_str(RAW_SCHEMA)
