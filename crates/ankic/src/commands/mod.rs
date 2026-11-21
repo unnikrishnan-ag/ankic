@@ -384,24 +384,24 @@ pub fn execute_plan(client: &AnkiClient, plan: RpcPlan) -> Result<Value, CliErro
             params,
             wait,
             timeout_secs,
-        } => client.call_and_maybe_wait(&method, params, wait, timeout_secs),
+        } => Ok(client.call_and_maybe_wait(&method, params, wait, timeout_secs)?),
         RpcPlan::Paginate {
             method,
             params,
             array_key,
-        } => client.paginate_all(&method, params, array_key),
+        } => Ok(client.paginate_all(&method, params, array_key)?),
         RpcPlan::WaitOperation {
             operation_id,
             timeout_secs,
-        } => client.wait_for_operation(&operation_id, timeout_secs),
+        } => Ok(client.wait_for_operation(&operation_id, timeout_secs)?),
         RpcPlan::Batch {
             mode,
             requests,
             wait,
             timeout_secs,
         } => match mode {
-            BatchMode::Execute => client.execute_batch(requests, wait, timeout_secs),
-            BatchMode::Transport => client.transport_batch(requests),
+            BatchMode::Execute => Ok(client.execute_batch(requests, wait, timeout_secs)?),
+            BatchMode::Transport => Ok(client.transport_batch(requests)?),
         },
     }
 }

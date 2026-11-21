@@ -43,8 +43,7 @@ impl OutputFormat {
 pub fn format_value(value: &Value, format: OutputFormat) -> Result<String, CliError> {
     match format {
         OutputFormat::Yaml => {
-            let rendered =
-                serde_norway::to_string(value).map_err(|e| CliError::Yaml(e.to_string()))?;
+            let rendered = serde_norway::to_string(value)?;
             Ok(rendered.trim_end().to_string())
         }
         OutputFormat::Json => Ok(serde_json::to_string(value)?),
@@ -138,11 +137,11 @@ mod tests {
 
     #[test]
     fn format_error_renders_rpc_and_invalid_input_in_yaml_and_json() {
-        let rpc_err = CliError::Rpc {
+        let rpc_err = CliError::from(anki_connect_client::AnkiError::Rpc {
             code: -32602,
             message: "Invalid params".to_string(),
             data: Some(json!({"field": "deck"})),
-        };
+        });
 
         let rpc_yaml = format_error(&rpc_err, OutputFormat::Yaml);
         let parsed_rpc_yaml: Value = serde_norway::from_str(&rpc_yaml).expect("valid yaml error");

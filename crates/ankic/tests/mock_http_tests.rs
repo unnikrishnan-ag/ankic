@@ -1,5 +1,6 @@
 use std::time::Duration;
 
+use anki_connect_client::AnkiError;
 use ankic::client::AnkiClient;
 use ankic::commands::{execute_plan, to_rpc_plan, Cli};
 use ankic::error::CliError;
@@ -375,9 +376,10 @@ fn async_operation_failed_and_cancelled_return_exit_code_4() {
     let err = client
         .wait_for_operation("op-fail", 5)
         .expect_err("failed operation should return error");
-    assert_eq!(err.exit_code(), 4);
-    assert!(matches!(err, CliError::OperationFailed { .. }));
-    let err_json = err.to_json();
+    assert!(matches!(err, AnkiError::OperationFailed { .. }));
+    let cli_err = CliError::from(err);
+    assert_eq!(cli_err.exit_code(), 4);
+    let err_json = cli_err.to_json();
     assert_eq!(err_json["error"]["kind"], "operation");
     assert_eq!(err_json["error"]["state"], "failed");
     assert_eq!(err_json["error"]["details"]["code"], 1012);
@@ -404,9 +406,10 @@ fn async_operation_failed_and_cancelled_return_exit_code_4() {
     let err = client
         .wait_for_operation("op-cancel", 5)
         .expect_err("cancelled operation should return error");
-    assert_eq!(err.exit_code(), 4);
-    assert!(matches!(err, CliError::OperationFailed { .. }));
-    let err_json = err.to_json();
+    assert!(matches!(err, AnkiError::OperationFailed { .. }));
+    let cli_err = CliError::from(err);
+    assert_eq!(cli_err.exit_code(), 4);
+    let err_json = cli_err.to_json();
     assert_eq!(err_json["error"]["kind"], "operation");
     assert_eq!(err_json["error"]["state"], "cancelled");
     assert_eq!(err_json["error"]["details"]["code"], 1007);
@@ -433,9 +436,11 @@ fn async_operation_polling_timeout_returns_exit_code_5() {
     let err = client
         .wait_for_operation("op-timeout", 0)
         .expect_err("polling timeout should return Timeout");
-    assert_eq!(err.exit_code(), 5);
-    assert!(matches!(err, CliError::Timeout { .. }));
-    let err_json = err.to_json();
+    assert!(err.is_timeout());
+    assert!(matches!(err, AnkiError::Timeout { .. }));
+    let cli_err = CliError::from(err);
+    assert_eq!(cli_err.exit_code(), 5);
+    let err_json = cli_err.to_json();
     assert_eq!(err_json["error"]["kind"], "timeout");
     assert_eq!(err_json["error"]["operationId"], "op-timeout");
     op_running.assert();
@@ -578,9 +583,11 @@ fn http_401_and_403_map_to_exit_code_3() {
         let err = client
             .call("decks.list", json!({}))
             .expect_err("HTTP error status should fail");
-        assert_eq!(err.exit_code(), 3);
-        assert!(matches!(err, CliError::HttpStatus { status: s, .. } if s as usize == status));
-        let err_json = err.to_json();
+        assert_eq!(err.http_status(), Some(status as u16));
+        assert!(matches!(err, AnkiError::HttpStatus { status: s, .. } if s as usize == status));
+        let cli_err = CliError::from(err);
+        assert_eq!(cli_err.exit_code(), 3);
+        let err_json = cli_err.to_json();
         assert_eq!(err_json["error"]["kind"], "http");
         assert_eq!(err_json["error"]["status"], status);
         mock.assert();
@@ -617,9 +624,12 @@ fn jsonrpc_error_1003_editor_conflict_maps_to_exit_code_4() {
     let err = client
         .call("decks.list", json!({}))
         .expect_err("JSON-RPC error 1003 should fail");
-    assert_eq!(err.exit_code(), 4);
-    assert!(matches!(err, CliError::Rpc { code: 1003, .. }));
-    let err_json = err.to_json();
+    assert!(err.is_rpc_error());
+    assert_eq!(err.rpc_code(), Some(1003));
+    assert!(matches!(err, AnkiError::Rpc { code: 1003, .. }));
+    let cli_err = CliError::from(err);
+    assert_eq!(cli_err.exit_code(), 4);
+    let err_json = cli_err.to_json();
     assert_eq!(err_json["error"]["kind"], "rpc");
     assert_eq!(err_json["error"]["code"], 1003);
     assert_eq!(err_json["error"]["data"]["type"], "editorConflict");
@@ -646,7 +656,7 @@ fn preflight_schema_validation_rejects_invalid_params_with_exit_code_2_before_ht
     let err = execute_plan(&validating_client, plan)
         .expect_err("invalid params must be rejected before HTTP");
     assert_eq!(err.exit_code(), 2);
-    assert!(matches!(err, CliError::InvalidInput(_)));
+    assert!(matches!(err, CliError::Client(AnkiError::InvalidInput(_))));
 
     // 2. Unknown method
     let cli_unknown_method =
@@ -655,7 +665,10 @@ fn preflight_schema_validation_rejects_invalid_params_with_exit_code_2_before_ht
     let err = execute_plan(&validating_client, plan)
         .expect_err("unknown method must be rejected before HTTP");
     assert_eq!(err.exit_code(), 2);
-    assert!(matches!(err, CliError::SchemaNotFound(_)));
+    assert!(matches!(
+        err,
+        CliError::Client(AnkiError::SchemaNotFound(_))
+    ));
 
     zero_http_mock.assert();
 

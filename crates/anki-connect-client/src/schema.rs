@@ -3,7 +3,7 @@ use std::sync::LazyLock;
 
 use serde_json::{json, Map, Value};
 
-use crate::error::CliError;
+use crate::error::{AnkiError, Result};
 
 const RAW_SCHEMA: &str = include_str!("../../../schemas/api-v1.schema.json");
 
@@ -44,12 +44,12 @@ pub fn all_method_names() -> Vec<&'static str> {
 }
 
 /// List all API v1 methods from the embedded schema, optionally filtered by substring.
-pub fn list_methods(filter: Option<&str>) -> Result<Value, CliError> {
+pub fn list_methods(filter: Option<&str>) -> Result<Value> {
     let schema = raw_schema();
     let methods = schema
         .get("x-methods")
         .and_then(Value::as_object)
-        .ok_or_else(|| CliError::SchemaNotFound("Missing x-methods in embedded schema".into()))?;
+        .ok_or_else(|| AnkiError::SchemaNotFound("Missing x-methods in embedded schema".into()))?;
 
     let needle = filter.map(|s| s.to_ascii_lowercase());
     let mut items = Vec::new();
@@ -78,16 +78,16 @@ pub fn list_methods(filter: Option<&str>) -> Result<Value, CliError> {
 
 /// Describe a single API v1 method, including its params/result schemas and all
 /// transitively referenced `$defs` so an LLM agent can construct valid requests.
-pub fn describe_method(method: &str) -> Result<Value, CliError> {
+pub fn describe_method(method: &str) -> Result<Value> {
     let schema = raw_schema();
     let methods = schema
         .get("x-methods")
         .and_then(Value::as_object)
-        .ok_or_else(|| CliError::SchemaNotFound("Missing x-methods in embedded schema".into()))?;
+        .ok_or_else(|| AnkiError::SchemaNotFound("Missing x-methods in embedded schema".into()))?;
 
     let spec = methods
         .get(method)
-        .ok_or_else(|| CliError::SchemaNotFound(format!("Unknown method '{method}'")))?;
+        .ok_or_else(|| AnkiError::SchemaNotFound(format!("Unknown method '{method}'")))?;
 
     let defs = schema
         .get("$defs")
@@ -126,7 +126,7 @@ pub fn describe_method(method: &str) -> Result<Value, CliError> {
 }
 
 /// Return documented API error types and limits from the embedded schema.
-pub fn list_errors_and_limits() -> Result<Value, CliError> {
+pub fn list_errors_and_limits() -> Result<Value> {
     let schema = raw_schema();
     Ok(json!({
         "errors": schema.get("x-errors").cloned().unwrap_or(Value::Null),
@@ -135,9 +135,9 @@ pub fn list_errors_and_limits() -> Result<Value, CliError> {
 }
 
 /// Validate `params` for `method` against its embedded JSON Schema in `api-v1.schema.json`.
-pub fn validate_method_params(method: &str, params: &Value) -> Result<(), CliError> {
+pub fn validate_method_params(method: &str, params: &Value) -> Result<()> {
     let spec = method_spec(method)
-        .ok_or_else(|| CliError::SchemaNotFound(format!("Unknown method '{method}'")))?;
+        .ok_or_else(|| AnkiError::SchemaNotFound(format!("Unknown method '{method}'")))?;
 
     let Some(params_schema) = spec.get("params") else {
         return Ok(());
@@ -146,11 +146,11 @@ pub fn validate_method_params(method: &str, params: &Value) -> Result<(), CliErr
     let defs = raw_schema()
         .get("$defs")
         .and_then(Value::as_object)
-        .ok_or_else(|| CliError::SchemaNotFound("Missing $defs in embedded schema".into()))?;
+        .ok_or_else(|| AnkiError::SchemaNotFound("Missing $defs in embedded schema".into()))?;
 
     validate_value_against_schema(params, params_schema, defs, "$").map_err(|err| match err {
-        CliError::InvalidInput(detail) => {
-            CliError::InvalidInput(format!("Schema validation failed for '{method}' {detail}"))
+        AnkiError::InvalidInput(detail) => {
+            AnkiError::InvalidInput(format!("Schema validation failed for '{method}' {detail}"))
         }
         other => other,
     })
@@ -161,12 +161,12 @@ fn validate_value_against_schema(
     schema_node: &Value,
     defs: &Map<String, Value>,
     path: &str,
-) -> Result<(), CliError> {
+) -> Result<()> {
     if let Some(b) = schema_node.as_bool() {
         return if b {
             Ok(())
         } else {
-            Err(CliError::InvalidInput(format!(
+            Err(AnkiError::InvalidInput(format!(
                 "({path}): value is not allowed by schema"
             )))
         };
@@ -179,7 +179,7 @@ fn validate_value_against_schema(
     if let Some(Value::String(reference)) = obj.get("$ref") {
         if let Some(name) = reference.strip_prefix("#/$defs/") {
             let target = defs.get(name).ok_or_else(|| {
-                CliError::SchemaNotFound(format!("Unknown schema definition '{name}'"))
+                AnkiError::SchemaNotFound(format!("Unknown schema definition '{name}'"))
             })?;
             validate_value_against_schema(value, target, defs, path)?;
         }
@@ -187,7 +187,7 @@ fn validate_value_against_schema(
 
     if let Some(const_val) = obj.get("const") {
         if value != const_val {
-            return Err(CliError::InvalidInput(format!(
+            return Err(AnkiError::InvalidInput(format!(
                 "({path}): expected constant value {const_val}, got {value}"
             )));
         }
@@ -195,7 +195,7 @@ fn validate_value_against_schema(
 
     if let Some(Value::Array(enum_arr)) = obj.get("enum") {
         if !enum_arr.contains(value) {
-            return Err(CliError::InvalidInput(format!(
+            return Err(AnkiError::InvalidInput(format!(
                 "({path}): value {value} is not one of the allowed enum values"
             )));
         }
@@ -212,7 +212,7 @@ fn validate_value_against_schema(
             .iter()
             .any(|branch| validate_value_against_schema(value, branch, defs, path).is_ok());
         if !matched {
-            return Err(CliError::InvalidInput(format!(
+            return Err(AnkiError::InvalidInput(format!(
                 "({path}): value does not match any of the allowed schemas in anyOf"
             )));
         }
@@ -224,7 +224,7 @@ fn validate_value_against_schema(
             .filter(|branch| validate_value_against_schema(value, branch, defs, path).is_ok())
             .count();
         if match_count != 1 {
-            return Err(CliError::InvalidInput(format!(
+            return Err(AnkiError::InvalidInput(format!(
                 "({path}): value must match exactly one schema in oneOf (matched {match_count})"
             )));
         }
@@ -232,7 +232,7 @@ fn validate_value_against_schema(
 
     if let Some(not_schema) = obj.get("not") {
         if validate_value_against_schema(value, not_schema, defs, path).is_ok() {
-            return Err(CliError::InvalidInput(format!(
+            return Err(AnkiError::InvalidInput(format!(
                 "({path}): value must not match disallowed schema"
             )));
         }
@@ -263,11 +263,11 @@ fn validate_value_against_schema(
     Ok(())
 }
 
-fn check_json_type(value: &Value, type_val: &Value, path: &str) -> Result<(), CliError> {
+fn check_json_type(value: &Value, type_val: &Value, path: &str) -> Result<()> {
     match type_val {
         Value::String(expected) => {
             if !matches_type(value, expected) {
-                return Err(CliError::InvalidInput(format!(
+                return Err(AnkiError::InvalidInput(format!(
                     "({path}): expected type '{expected}', got {}",
                     json_type_name(value)
                 )));
@@ -279,7 +279,7 @@ fn check_json_type(value: &Value, type_val: &Value, path: &str) -> Result<(), Cl
                 .filter_map(Value::as_str)
                 .any(|expected| matches_type(value, expected));
             if !matched {
-                return Err(CliError::InvalidInput(format!(
+                return Err(AnkiError::InvalidInput(format!(
                     "({path}): value type '{}' is not in allowed types",
                     json_type_name(value)
                 )));
@@ -320,12 +320,12 @@ fn validate_object(
     obj: &Map<String, Value>,
     defs: &Map<String, Value>,
     path: &str,
-) -> Result<(), CliError> {
+) -> Result<()> {
     if let Some(Value::Array(required)) = obj.get("required") {
         for req in required {
             if let Some(key) = req.as_str() {
                 if !map.contains_key(key) {
-                    return Err(CliError::InvalidInput(format!(
+                    return Err(AnkiError::InvalidInput(format!(
                         "({path}): missing required property '{key}'"
                     )));
                 }
@@ -335,7 +335,7 @@ fn validate_object(
 
     if let Some(min_props) = obj.get("minProperties").and_then(Value::as_u64) {
         if (map.len() as u64) < min_props {
-            return Err(CliError::InvalidInput(format!(
+            return Err(AnkiError::InvalidInput(format!(
                 "({path}): object must have at least {min_props} properties"
             )));
         }
@@ -350,7 +350,7 @@ fn validate_object(
             validate_value_against_schema(val, prop_schema, defs, &child_path)?;
         } else if let Some(add_schema) = additional {
             if add_schema == &Value::Bool(false) {
-                return Err(CliError::InvalidInput(format!(
+                return Err(AnkiError::InvalidInput(format!(
                     "({path}): unknown property '{key}' is not allowed"
                 )));
             } else if add_schema.is_object() {
@@ -367,10 +367,10 @@ fn validate_array(
     obj: &Map<String, Value>,
     defs: &Map<String, Value>,
     path: &str,
-) -> Result<(), CliError> {
+) -> Result<()> {
     if let Some(min_items) = obj.get("minItems").and_then(Value::as_u64) {
         if (arr.len() as u64) < min_items {
-            return Err(CliError::InvalidInput(format!(
+            return Err(AnkiError::InvalidInput(format!(
                 "({path}): array must have at least {min_items} items"
             )));
         }
@@ -378,7 +378,7 @@ fn validate_array(
 
     if let Some(max_items) = obj.get("maxItems").and_then(Value::as_u64) {
         if (arr.len() as u64) > max_items {
-            return Err(CliError::InvalidInput(format!(
+            return Err(AnkiError::InvalidInput(format!(
                 "({path}): array must have at most {max_items} items"
             )));
         }
@@ -387,7 +387,7 @@ fn validate_array(
     if obj.get("uniqueItems") == Some(&Value::Bool(true)) {
         for (i, item) in arr.iter().enumerate() {
             if arr[i + 1..].contains(item) {
-                return Err(CliError::InvalidInput(format!(
+                return Err(AnkiError::InvalidInput(format!(
                     "({path}): array items must be unique"
                 )));
             }
@@ -406,10 +406,10 @@ fn validate_array(
     Ok(())
 }
 
-fn validate_string(s: &str, obj: &Map<String, Value>, path: &str) -> Result<(), CliError> {
+fn validate_string(s: &str, obj: &Map<String, Value>, path: &str) -> Result<()> {
     if let Some(min_len) = obj.get("minLength").and_then(Value::as_u64) {
         if (s.chars().count() as u64) < min_len {
-            return Err(CliError::InvalidInput(format!(
+            return Err(AnkiError::InvalidInput(format!(
                 "({path}): string length must be at least {min_len}"
             )));
         }
@@ -417,7 +417,7 @@ fn validate_string(s: &str, obj: &Map<String, Value>, path: &str) -> Result<(), 
 
     if let Some(max_len) = obj.get("maxLength").and_then(Value::as_u64) {
         if (s.chars().count() as u64) > max_len {
-            return Err(CliError::InvalidInput(format!(
+            return Err(AnkiError::InvalidInput(format!(
                 "({path}): string length must be at most {max_len}"
             )));
         }
@@ -425,7 +425,7 @@ fn validate_string(s: &str, obj: &Map<String, Value>, path: &str) -> Result<(), 
 
     if let Some(Value::String(pattern)) = obj.get("pattern") {
         if !matches_known_pattern(s, pattern) {
-            return Err(CliError::InvalidInput(format!(
+            return Err(AnkiError::InvalidInput(format!(
                 "({path}): string '{s}' does not match pattern '{pattern}'"
             )));
         }
@@ -469,14 +469,14 @@ fn validate_number(
     n: &serde_json::Number,
     obj: &Map<String, Value>,
     path: &str,
-) -> Result<(), CliError> {
+) -> Result<()> {
     let Some(val) = n.as_f64() else {
         return Ok(());
     };
 
     if let Some(min) = obj.get("minimum").and_then(Value::as_f64) {
         if val < min {
-            return Err(CliError::InvalidInput(format!(
+            return Err(AnkiError::InvalidInput(format!(
                 "({path}): value {n} must be >= {min}"
             )));
         }
@@ -484,7 +484,7 @@ fn validate_number(
 
     if let Some(max) = obj.get("maximum").and_then(Value::as_f64) {
         if val > max {
-            return Err(CliError::InvalidInput(format!(
+            return Err(AnkiError::InvalidInput(format!(
                 "({path}): value {n} must be <= {max}"
             )));
         }
@@ -492,7 +492,7 @@ fn validate_number(
 
     if let Some(ex_min) = obj.get("exclusiveMinimum").and_then(Value::as_f64) {
         if val <= ex_min {
-            return Err(CliError::InvalidInput(format!(
+            return Err(AnkiError::InvalidInput(format!(
                 "({path}): value {n} must be > {ex_min}"
             )));
         }
@@ -500,7 +500,7 @@ fn validate_number(
 
     if let Some(ex_max) = obj.get("exclusiveMaximum").and_then(Value::as_f64) {
         if val >= ex_max {
-            return Err(CliError::InvalidInput(format!(
+            return Err(AnkiError::InvalidInput(format!(
                 "({path}): value {n} must be < {ex_max}"
             )));
         }
@@ -621,30 +621,30 @@ mod tests {
     #[test]
     fn validate_method_params_rejects_invalid_inputs() {
         let unknown = validate_method_params("nonexistent.method", &json!({}));
-        assert!(matches!(unknown, Err(CliError::SchemaNotFound(_))));
+        assert!(matches!(unknown, Err(AnkiError::SchemaNotFound(_))));
 
         let missing_required = validate_method_params("notes.get", &json!({}));
-        assert!(matches!(missing_required, Err(CliError::InvalidInput(_))));
+        assert!(matches!(missing_required, Err(AnkiError::InvalidInput(_))));
 
         let extra_prop = validate_method_params(
             "operations.get",
             &json!({ "operationId": "op-1", "session": "s-1" }),
         );
-        assert!(matches!(extra_prop, Err(CliError::InvalidInput(_))));
+        assert!(matches!(extra_prop, Err(AnkiError::InvalidInput(_))));
 
         let zero_id = validate_method_params("notes.get", &json!({ "id": "0" }));
-        assert!(matches!(zero_id, Err(CliError::InvalidInput(_))));
+        assert!(matches!(zero_id, Err(AnkiError::InvalidInput(_))));
 
         let alpha_id = validate_method_params("notes.get", &json!({ "id": "abc" }));
-        assert!(matches!(alpha_id, Err(CliError::InvalidInput(_))));
+        assert!(matches!(alpha_id, Err(AnkiError::InvalidInput(_))));
 
         let both_ref = validate_method_params(
             "decks.get",
             &json!({ "deck": { "id": "1", "name": "Default" } }),
         );
-        assert!(matches!(both_ref, Err(CliError::InvalidInput(_))));
+        assert!(matches!(both_ref, Err(AnkiError::InvalidInput(_))));
 
         let empty_ref = validate_method_params("decks.get", &json!({ "deck": {} }));
-        assert!(matches!(empty_ref, Err(CliError::InvalidInput(_))));
+        assert!(matches!(empty_ref, Err(AnkiError::InvalidInput(_))));
     }
 }

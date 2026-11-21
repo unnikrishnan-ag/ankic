@@ -5,7 +5,7 @@ use std::time::{Duration, Instant};
 use reqwest::blocking::Client;
 use serde_json::{json, Map, Value};
 
-use crate::error::CliError;
+use crate::error::{AnkiError, Result};
 use crate::schema;
 
 static REQUEST_ID: AtomicU64 = AtomicU64::new(1);
@@ -26,7 +26,7 @@ impl AnkiClient {
         url: impl Into<String>,
         api_key: Option<String>,
         session: Option<String>,
-    ) -> Result<Self, CliError> {
+    ) -> Result<Self> {
         let http = Client::builder()
             .timeout(Duration::from_secs(30))
             .build()?;
@@ -61,7 +61,7 @@ impl AnkiClient {
     }
 
     /// Execute a single JSON-RPC 2.0 call and return its `result`.
-    pub fn call(&self, method: &str, params: Value) -> Result<Value, CliError> {
+    pub fn call(&self, method: &str, params: Value) -> Result<Value> {
         let params = self.prepare_params(method, params)?;
         let id = REQUEST_ID.fetch_add(1, Ordering::Relaxed);
         let body = json!({
@@ -81,15 +81,15 @@ impl AnkiClient {
         commands: Vec<(String, Value)>,
         wait: bool,
         timeout_secs: u64,
-    ) -> Result<Value, CliError> {
+    ) -> Result<Value> {
         let items = self.prepare_execute_commands(commands)?;
         self.call_and_maybe_wait("api.execute", json!({ "commands": items }), wait, timeout_secs)
     }
 
     /// Execute multiple JSON-RPC 2.0 requests in a single HTTP `TransportBatch` array POST.
-    pub fn transport_batch(&self, requests: Vec<(String, Value)>) -> Result<Value, CliError> {
+    pub fn transport_batch(&self, requests: Vec<(String, Value)>) -> Result<Value> {
         if requests.is_empty() || requests.len() > 100 {
-            return Err(CliError::InvalidInput(
+            return Err(AnkiError::InvalidInput(
                 "Transport batch must contain between 1 and 100 requests".into(),
             ));
         }
@@ -112,7 +112,7 @@ impl AnkiClient {
         } else if let Some(err) = reply.get("error") {
             Err(rpc_error_from_value(err))
         } else {
-            Err(CliError::InvalidInput(
+            Err(AnkiError::InvalidInput(
                 "Expected JSON array response for transport batch".into(),
             ))
         }
@@ -121,7 +121,7 @@ impl AnkiClient {
     fn prepare_execute_commands(
         &self,
         commands: Vec<(String, Value)>,
-    ) -> Result<Vec<Value>, CliError> {
+    ) -> Result<Vec<Value>> {
         let mut items = Vec::with_capacity(commands.len());
         for (method, params) in commands {
             let prepared = self.prepare_params(&method, params)?;
@@ -133,7 +133,7 @@ impl AnkiClient {
         Ok(items)
     }
 
-    fn post_json(&self, body: &Value) -> Result<Value, CliError> {
+    fn post_json(&self, body: &Value) -> Result<Value> {
         let mut req = self
             .http
             .post(&self.url)
@@ -148,7 +148,7 @@ impl AnkiClient {
         let status = resp.status();
         if !status.is_success() {
             let text = resp.text().unwrap_or_default();
-            return Err(CliError::HttpStatus {
+            return Err(AnkiError::HttpStatus {
                 status: status.as_u16(),
                 message: if text.is_empty() {
                     status.canonical_reason().unwrap_or("HTTP error").to_string()
@@ -169,7 +169,7 @@ impl AnkiClient {
         params: Value,
         wait: bool,
         timeout_secs: u64,
-    ) -> Result<Value, CliError> {
+    ) -> Result<Value> {
         let result = self.call(method, params)?;
         if !wait {
             return Ok(result);
@@ -187,7 +187,7 @@ impl AnkiClient {
         &self,
         operation_id: &str,
         timeout_secs: u64,
-    ) -> Result<Value, CliError> {
+    ) -> Result<Value> {
         let deadline = Instant::now() + Duration::from_secs(timeout_secs);
         let mut delay = self.poll_initial_delay;
         let max_delay = self.poll_max_delay;
@@ -211,7 +211,7 @@ impl AnkiClient {
                         .and_then(Value::as_str)
                         .unwrap_or("Operation did not succeed")
                         .to_string();
-                    return Err(CliError::OperationFailed {
+                    return Err(AnkiError::OperationFailed {
                         operation_id: operation_id.to_string(),
                         state: state.to_string(),
                         message: msg,
@@ -220,7 +220,7 @@ impl AnkiClient {
                 }
                 _ => {
                     if Instant::now() >= deadline {
-                        return Err(CliError::Timeout {
+                        return Err(AnkiError::Timeout {
                             operation_id: operation_id.to_string(),
                             timeout_secs,
                         });
@@ -239,7 +239,7 @@ impl AnkiClient {
         method: &str,
         mut params: Map<String, Value>,
         array_key: &str,
-    ) -> Result<Value, CliError> {
+    ) -> Result<Value> {
         let mut all_items: Vec<Value> = Vec::new();
         let mut pages = 0usize;
 
@@ -268,7 +268,7 @@ impl AnkiClient {
 
     /// Inject `"session"` for collection-scoped methods and optionally validate
     /// parameters against the embedded API v1 schema.
-    pub fn prepare_params(&self, method: &str, params: Value) -> Result<Value, CliError> {
+    pub fn prepare_params(&self, method: &str, params: Value) -> Result<Value> {
         let params = if let Some(session) = &self.session {
             if schema::method_scope(method) == Some("collection") {
                 match params {
@@ -295,7 +295,7 @@ impl AnkiClient {
     }
 }
 
-fn rpc_error_from_value(err: &Value) -> CliError {
+fn rpc_error_from_value(err: &Value) -> AnkiError {
     let code = err.get("code").and_then(Value::as_i64).unwrap_or(-32603);
     let message = err
         .get("message")
@@ -303,20 +303,20 @@ fn rpc_error_from_value(err: &Value) -> CliError {
         .unwrap_or("Unknown JSON-RPC error")
         .to_string();
     let data = err.get("data").cloned();
-    CliError::Rpc {
+    AnkiError::Rpc {
         code,
         message,
         data,
     }
 }
 
-fn parse_rpc_reply(reply: Value, expected_id: u64) -> Result<Value, CliError> {
+fn parse_rpc_reply(reply: Value, expected_id: u64) -> Result<Value> {
     if let Some(err) = reply.get("error") {
         return Err(rpc_error_from_value(err));
     }
 
     if reply.get("id").and_then(Value::as_u64) != Some(expected_id) {
-        return Err(CliError::InvalidInput(format!(
+        return Err(AnkiError::InvalidInput(format!(
             "Unexpected JSON-RPC response id (expected {expected_id})"
         )));
     }
@@ -358,7 +358,8 @@ mod tests {
             }
         });
         let err = parse_rpc_reply(reply, 7).unwrap_err();
-        assert_eq!(err.exit_code(), 4);
+        assert!(err.is_rpc_error());
+        assert_eq!(err.rpc_code(), Some(1001));
     }
 
     #[test]
@@ -416,7 +417,7 @@ mod tests {
         let err = client
             .prepare_params("notes.get", json!({}))
             .expect_err("missing required id should fail validation");
-        assert_eq!(err.exit_code(), 2);
+        assert!(matches!(err, AnkiError::InvalidInput(_)));
 
         let unvalidated = client.with_validation(false);
         let ok = unvalidated
@@ -443,7 +444,7 @@ mod tests {
         let empty_err = client
             .transport_batch(vec![])
             .expect_err("empty batch must fail");
-        assert_eq!(empty_err.exit_code(), 2);
+        assert!(matches!(empty_err, AnkiError::InvalidInput(_)));
 
         let too_many: Vec<(String, Value)> = (0..101)
             .map(|_| ("decks.list".to_string(), json!({})))
@@ -451,7 +452,7 @@ mod tests {
         let over_limit_err = client
             .transport_batch(too_many)
             .expect_err("batch over 100 must fail");
-        assert_eq!(over_limit_err.exit_code(), 2);
+        assert!(matches!(over_limit_err, AnkiError::InvalidInput(_)));
     }
 
     #[test]
@@ -481,7 +482,7 @@ mod tests {
         let invalid_err = client
             .prepare_execute_commands(vec![("notes.get".to_string(), json!({}))])
             .expect_err("invalid inner command should fail pre-flight validation");
-        assert_eq!(invalid_err.exit_code(), 2);
+        assert!(matches!(invalid_err, AnkiError::InvalidInput(_)));
     }
 
     #[test]

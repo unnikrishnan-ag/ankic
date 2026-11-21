@@ -1,16 +1,22 @@
-use serde_json::{json, Value};
+use serde_json::Value;
 use thiserror::Error;
 
-/// Structured CLI errors with deterministic exit codes and JSON serialization
-/// for LLM agent consumption.
+/// Convenience `Result` alias using [`AnkiError`] as the default error type.
+pub type Result<T, E = AnkiError> = std::result::Result<T, E>;
+
+/// Structured errors returned by the `anki-connect-client` library.
+#[non_exhaustive]
 #[derive(Debug, Error)]
-pub enum CliError {
+pub enum AnkiError {
+    /// HTTP transport or connection failure from `reqwest`.
     #[error("Transport error: {0}")]
     Transport(#[from] reqwest::Error),
 
+    /// Non-success HTTP status returned by the Anki-Connect server.
     #[error("HTTP {status}: {message}")]
     HttpStatus { status: u16, message: String },
 
+    /// JSON-RPC 2.0 error object returned by the server.
     #[error("JSON-RPC error {code}: {message}")]
     Rpc {
         code: i64,
@@ -18,6 +24,7 @@ pub enum CliError {
         data: Option<Value>,
     },
 
+    /// Asynchronous operation terminated in a `failed` or `cancelled` state.
     #[error("Operation {operation_id} {state}: {message}")]
     OperationFailed {
         operation_id: String,
@@ -26,233 +33,137 @@ pub enum CliError {
         error: Option<Value>,
     },
 
+    /// Timed out waiting for an asynchronous operation to complete.
     #[error("Timed out waiting for operation {operation_id} after {timeout_secs}s")]
     Timeout {
         operation_id: String,
         timeout_secs: u64,
     },
 
+    /// Invalid parameters or client-side validation failure.
     #[error("Invalid input: {0}")]
     InvalidInput(String),
 
+    /// Requested method or definition was not found in the embedded schema.
     #[error("Schema lookup failed: {0}")]
     SchemaNotFound(String),
 
+    /// JSON serialization or deserialization failure.
     #[error("JSON serialization error: {0}")]
     Json(#[from] serde_json::Error),
-
-    #[error("YAML serialization error: {0}")]
-    Yaml(String),
 }
 
-impl CliError {
-    /// Exit codes help agents and shell scripts distinguish failure categories:
-    /// - 2: Invalid CLI input or schema lookup failure
-    /// - 3: Transport / HTTP auth / origin rejection
-    /// - 4: JSON-RPC or async operation error
-    /// - 5: Operation polling timeout
-    pub fn exit_code(&self) -> i32 {
+impl AnkiError {
+    /// Returns `true` if this error is a JSON-RPC 2.0 error returned by the server.
+    pub fn is_rpc_error(&self) -> bool {
+        matches!(self, Self::Rpc { .. })
+    }
+
+    /// Returns the JSON-RPC error code if this is an [`AnkiError::Rpc`] error.
+    pub fn rpc_code(&self) -> Option<i64> {
         match self {
-            CliError::InvalidInput(_)
-            | CliError::SchemaNotFound(_)
-            | CliError::Json(_)
-            | CliError::Yaml(_) => 2,
-            CliError::Transport(_) | CliError::HttpStatus { .. } => 3,
-            CliError::Rpc { .. } | CliError::OperationFailed { .. } => 4,
-            CliError::Timeout { .. } => 5,
+            Self::Rpc { code, .. } => Some(*code),
+            _ => None,
         }
     }
 
-    /// Serialize the error as structured JSON for stderr.
-    pub fn to_json(&self) -> Value {
+    /// Returns the HTTP status code if this is an [`AnkiError::HttpStatus`] error.
+    pub fn http_status(&self) -> Option<u16> {
         match self {
-            CliError::Rpc {
-                code,
-                message,
-                data,
-            } => json!({
-                "error": {
-                    "kind": "rpc",
-                    "code": code,
-                    "message": message,
-                    "data": data,
-                }
-            }),
-            CliError::OperationFailed {
-                operation_id,
-                state,
-                message,
-                error,
-            } => json!({
-                "error": {
-                    "kind": "operation",
-                    "operationId": operation_id,
-                    "state": state,
-                    "message": message,
-                    "details": error,
-                }
-            }),
-            CliError::HttpStatus { status, message } => json!({
-                "error": {
-                    "kind": "http",
-                    "status": status,
-                    "message": message,
-                }
-            }),
-            CliError::Timeout {
-                operation_id,
-                timeout_secs,
-            } => json!({
-                "error": {
-                    "kind": "timeout",
-                    "operationId": operation_id,
-                    "timeoutSecs": timeout_secs,
-                }
-            }),
-            other => json!({
-                "error": {
-                    "kind": "cli",
-                    "message": other.to_string(),
-                }
-            }),
+            Self::HttpStatus { status, .. } => Some(*status),
+            _ => None,
         }
+    }
+
+    /// Returns `true` if this error is an operation polling timeout.
+    pub fn is_timeout(&self) -> bool {
+        matches!(self, Self::Timeout { .. })
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::json;
 
     #[test]
-    fn exit_codes_are_deterministic() {
-        let json_err = serde_json::from_str::<Value>("{invalid").unwrap_err();
+    fn display_formatting_matches_expected_messages() {
+        let http = AnkiError::HttpStatus {
+            status: 401,
+            message: "Unauthorized".into(),
+        };
+        assert_eq!(http.to_string(), "HTTP 401: Unauthorized");
 
-        assert_eq!(CliError::InvalidInput("bad".into()).exit_code(), 2);
-        assert_eq!(CliError::SchemaNotFound("missing".into()).exit_code(), 2);
-        assert_eq!(CliError::Json(json_err).exit_code(), 2);
-        assert_eq!(CliError::Yaml("invalid yaml".into()).exit_code(), 2);
+        let rpc = AnkiError::Rpc {
+            code: -32602,
+            message: "Invalid params".into(),
+            data: Some(json!({"field": "deck"})),
+        };
+        assert_eq!(rpc.to_string(), "JSON-RPC error -32602: Invalid params");
 
+        let op = AnkiError::OperationFailed {
+            operation_id: "op-1".into(),
+            state: "failed".into(),
+            message: "boom".into(),
+            error: None,
+        };
+        assert_eq!(op.to_string(), "Operation op-1 failed: boom");
+
+        let timeout = AnkiError::Timeout {
+            operation_id: "op-2".into(),
+            timeout_secs: 30,
+        };
         assert_eq!(
-            CliError::HttpStatus {
-                status: 401,
-                message: "Unauthorized".into(),
-            }
-            .exit_code(),
-            3
+            timeout.to_string(),
+            "Timed out waiting for operation op-2 after 30s"
         );
 
-        assert_eq!(
-            CliError::Rpc {
-                code: -32602,
-                message: "Invalid params".into(),
-                data: None,
-            }
-            .exit_code(),
-            4
-        );
-        assert_eq!(
-            CliError::OperationFailed {
-                operation_id: "op-1".into(),
-                state: "failed".into(),
-                message: "boom".into(),
-                error: None,
-            }
-            .exit_code(),
-            4
-        );
+        let invalid = AnkiError::InvalidInput("missing field".into());
+        assert_eq!(invalid.to_string(), "Invalid input: missing field");
 
-        assert_eq!(
-            CliError::Timeout {
-                operation_id: "op-2".into(),
-                timeout_secs: 30,
-            }
-            .exit_code(),
-            5
-        );
+        let schema = AnkiError::SchemaNotFound("unknown.method".into());
+        assert_eq!(schema.to_string(), "Schema lookup failed: unknown.method");
+
+        let json_err: AnkiError = serde_json::from_str::<Value>("{invalid")
+            .unwrap_err()
+            .into();
+        assert!(json_err.to_string().starts_with("JSON serialization error:"));
     }
 
     #[test]
-    fn to_json_produces_expected_envelope_for_each_kind() {
-        let rpc = CliError::Rpc {
-            code: -32600,
-            message: "Invalid Request".into(),
-            data: Some(json!({"detail": "missing method"})),
-        }
-        .to_json();
-        assert_eq!(
-            rpc,
-            json!({
-                "error": {
-                    "kind": "rpc",
-                    "code": -32600,
-                    "message": "Invalid Request",
-                    "data": {"detail": "missing method"},
-                }
-            })
-        );
+    fn helper_predicates_inspect_variants_accurately() {
+        let rpc = AnkiError::Rpc {
+            code: 1003,
+            message: "Editor conflict.".into(),
+            data: None,
+        };
+        assert!(rpc.is_rpc_error());
+        assert_eq!(rpc.rpc_code(), Some(1003));
+        assert_eq!(rpc.http_status(), None);
+        assert!(!rpc.is_timeout());
 
-        let operation = CliError::OperationFailed {
-            operation_id: "op-9".into(),
-            state: "cancelled".into(),
-            message: "User cancelled".into(),
-            error: Some(json!({"code": "CANCELLED"})),
-        }
-        .to_json();
-        assert_eq!(
-            operation,
-            json!({
-                "error": {
-                    "kind": "operation",
-                    "operationId": "op-9",
-                    "state": "cancelled",
-                    "message": "User cancelled",
-                    "details": {"code": "CANCELLED"},
-                }
-            })
-        );
-
-        let http = CliError::HttpStatus {
+        let http = AnkiError::HttpStatus {
             status: 403,
             message: "Forbidden".into(),
-        }
-        .to_json();
-        assert_eq!(
-            http,
-            json!({
-                "error": {
-                    "kind": "http",
-                    "status": 403,
-                    "message": "Forbidden",
-                }
-            })
-        );
+        };
+        assert!(!http.is_rpc_error());
+        assert_eq!(http.rpc_code(), None);
+        assert_eq!(http.http_status(), Some(403));
+        assert!(!http.is_timeout());
 
-        let timeout = CliError::Timeout {
+        let timeout = AnkiError::Timeout {
             operation_id: "op-42".into(),
             timeout_secs: 120,
-        }
-        .to_json();
-        assert_eq!(
-            timeout,
-            json!({
-                "error": {
-                    "kind": "timeout",
-                    "operationId": "op-42",
-                    "timeoutSecs": 120,
-                }
-            })
-        );
+        };
+        assert!(!timeout.is_rpc_error());
+        assert_eq!(timeout.rpc_code(), None);
+        assert_eq!(timeout.http_status(), None);
+        assert!(timeout.is_timeout());
 
-        let cli_err = CliError::Yaml("invalid yaml".into());
-        let expected_msg = cli_err.to_string();
-        assert_eq!(
-            cli_err.to_json(),
-            json!({
-                "error": {
-                    "kind": "cli",
-                    "message": expected_msg,
-                }
-            })
-        );
+        let invalid = AnkiError::InvalidInput("bad".into());
+        assert!(!invalid.is_rpc_error());
+        assert_eq!(invalid.rpc_code(), None);
+        assert_eq!(invalid.http_status(), None);
+        assert!(!invalid.is_timeout());
     }
 }
