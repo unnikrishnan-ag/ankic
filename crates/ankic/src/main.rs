@@ -2,7 +2,7 @@ use std::process::ExitCode;
 
 use clap::Parser;
 
-use ankic::client::AnkiClient;
+use ankic::blocking::AnkiClient;
 use ankic::commands::dispatch;
 use ankic::output;
 use ankic::Cli;

@@ -1,4 +1,4 @@
-pub use anki_connect_client::{client, schema};
+pub use anki_connect_client::{blocking, client, schema};
 
 pub mod commands;
 pub mod error;

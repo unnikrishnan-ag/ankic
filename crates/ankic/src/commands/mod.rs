@@ -1,7 +1,7 @@
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use serde_json::{json, Map, Value};
 
-use crate::client::AnkiClient;
+use crate::blocking::AnkiClient;
 use crate::error::CliError;
 use crate::output::OutputFormat;
 use crate::schema;
@@ -393,7 +393,7 @@ pub fn execute_plan(client: &AnkiClient, plan: RpcPlan) -> Result<Value, CliErro
         RpcPlan::WaitOperation {
             operation_id,
             timeout_secs,
-        } => Ok(client.wait_for_operation(&operation_id, timeout_secs)?),
+        } => Ok(client.wait_for_operation_raw(&operation_id, timeout_secs)?),
         RpcPlan::Batch {
             mode,
             requests,

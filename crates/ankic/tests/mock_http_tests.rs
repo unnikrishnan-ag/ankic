@@ -1,7 +1,7 @@
 use std::time::Duration;
 
+use anki_connect_client::blocking::AnkiClient;
 use anki_connect_client::AnkiError;
-use ankic::client::AnkiClient;
 use ankic::commands::{execute_plan, to_rpc_plan, Cli};
 use ankic::error::CliError;
 use clap::Parser;
@@ -119,11 +119,11 @@ fn scope_aware_session_injected_for_collection_methods() {
 
     let client = AnkiClient::new(server.url(), None, Some("s-1".into())).expect("client init");
 
-    let decks = client.call("decks.list", json!({})).expect("decks.list");
+    let decks = client.call_raw("decks.list", json!({})).expect("decks.list");
     assert_eq!(decks[0]["name"], "Default");
 
     let note = client
-        .call("notes.get", json!({ "id": "1700000000001" }))
+        .call_raw("notes.get", json!({ "id": "1700000000001" }))
         .expect("notes.get");
     assert_eq!(note["id"], "1700000000001");
 
@@ -163,20 +163,20 @@ fn scope_aware_session_omitted_for_application_methods() {
     let client = AnkiClient::new(server.url(), None, Some("s-1".into())).expect("client init");
 
     let op = client
-        .call("operations.get", json!({ "operationId": "op-1" }))
+        .call_raw("operations.get", json!({ "operationId": "op-1" }))
         .expect("operations.get");
     assert_eq!(op["operationId"], "op-1");
 
-    let desc = client.call("api.describe", json!({})).expect("api.describe");
+    let desc = client.call_raw("api.describe", json!({})).expect("api.describe");
     assert_eq!(desc["apiVersion"], "1");
 
     let profiles = client
-        .call("profiles.list", json!({}))
+        .call_raw("profiles.list", json!({}))
         .expect("profiles.list");
     assert_eq!(profiles, json!(["User 1"]));
 
     let access = client
-        .call("access.requestPermission", json!({}))
+        .call_raw("access.requestPermission", json!({}))
         .expect("access.requestPermission");
     assert_eq!(access["permission"], "granted");
 
@@ -374,7 +374,7 @@ fn async_operation_failed_and_cancelled_return_exit_code_4() {
     );
 
     let err = client
-        .wait_for_operation("op-fail", 5)
+        .wait_for_operation_raw("op-fail", 5)
         .expect_err("failed operation should return error");
     assert!(matches!(err, AnkiError::OperationFailed { .. }));
     let cli_err = CliError::from(err);
@@ -404,7 +404,7 @@ fn async_operation_failed_and_cancelled_return_exit_code_4() {
     );
 
     let err = client
-        .wait_for_operation("op-cancel", 5)
+        .wait_for_operation_raw("op-cancel", 5)
         .expect_err("cancelled operation should return error");
     assert!(matches!(err, AnkiError::OperationFailed { .. }));
     let cli_err = CliError::from(err);
@@ -434,7 +434,7 @@ fn async_operation_polling_timeout_returns_exit_code_5() {
 
     // timeout_secs = 0 triggers immediate deadline check after first non-terminal poll
     let err = client
-        .wait_for_operation("op-timeout", 0)
+        .wait_for_operation_raw("op-timeout", 0)
         .expect_err("polling timeout should return Timeout");
     assert!(err.is_timeout());
     assert!(matches!(err, AnkiError::Timeout { .. }));
@@ -581,7 +581,7 @@ fn http_401_and_403_map_to_exit_code_3() {
             .create();
 
         let err = client
-            .call("decks.list", json!({}))
+            .call_raw("decks.list", json!({}))
             .expect_err("HTTP error status should fail");
         assert_eq!(err.http_status(), Some(status as u16));
         assert!(matches!(err, AnkiError::HttpStatus { status: s, .. } if s as usize == status));
@@ -622,7 +622,7 @@ fn jsonrpc_error_1003_editor_conflict_maps_to_exit_code_4() {
         .create();
 
     let err = client
-        .call("decks.list", json!({}))
+        .call_raw("decks.list", json!({}))
         .expect_err("JSON-RPC error 1003 should fail");
     assert!(err.is_rpc_error());
     assert_eq!(err.rpc_code(), Some(1003));

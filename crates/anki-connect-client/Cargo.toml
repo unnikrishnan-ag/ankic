@@ -8,7 +8,8 @@ repository.workspace = true
 description = "Rust client library for Anki-Connect API v1"
 
 [features]
-default = ["blocking", "schema"]
+default = ["async", "schema"]
+async = ["dep:tokio"]
 blocking = ["reqwest/blocking"]
 schema = []
 
@@ -17,6 +18,8 @@ reqwest = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
+tokio = { workspace = true, optional = true }
 
 [dev-dependencies]
 mockito = { workspace = true }
+tokio = { version = "1", features = ["macros", "rt"] }
