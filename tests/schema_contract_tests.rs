@@ -1,8 +1,8 @@
 use std::collections::BTreeMap;
 use std::sync::LazyLock;
 
-use anki_skill::commands::{to_rpc_plan, BatchMode, Cli, RpcPlan};
-use anki_skill::schema::{method_scope, validate_method_params};
+use ankic::commands::{to_rpc_plan, BatchMode, Cli, RpcPlan};
+use ankic::schema::{method_scope, validate_method_params};
 use clap::Parser;
 use serde_json::{json, Value};
 
@@ -121,7 +121,7 @@ fn inject_session_for_scope(method: &str, raw_params: &Value, session_id: &str) 
 }
 
 /// Validate `(method, raw_params)` against `schemas/api-v1.schema.json` and
-/// `anki_skill::schema::validate_method_params` in both session modes:
+/// `ankic::schema::validate_method_params` in both session modes:
 /// 1. Without a session
 /// 2. With `--session "test-session"` applied via scope-aware session injection
 pub fn validate_rpc_contract(method: &str, raw_params: &Value) -> Result<(), String> {
@@ -261,24 +261,24 @@ fn schema_x_invalid_examples_are_rejected() {
 pub(crate) fn core_domain_cli_cases() -> &'static [&'static [&'static str]] {
     &[
         // Escape hatches (2 RPC methods)
-        &["anki-cli", "describe"],
-        &["anki-cli", "call", "decks.list"],
+        &["ankic", "describe"],
+        &["ankic", "call", "decks.list"],
         &[
-            "anki-cli",
+            "ankic",
             "call",
             "notes.get",
             "--params",
             "id: '1700000000001'",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "call",
             "notes.get",
             "--params",
             r#"{"id":"1700000000001"}"#,
         ],
         &[
-            "anki-cli",
+            "ankic",
             "batch",
             "--mode",
             "execute",
@@ -286,7 +286,7 @@ pub(crate) fn core_domain_cli_cases() -> &'static [&'static [&'static str]] {
             r#"[{"method":"notes.create","params":{"deck":{"name":"Default"},"noteType":{"name":"Basic"},"fields":{"Front":"Q","Back":"A"}}},{"method":"collection.sync","params":{}}]"#,
         ],
         &[
-            "anki-cli",
+            "ankic",
             "batch",
             "--mode",
             "transport",
@@ -294,36 +294,36 @@ pub(crate) fn core_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "- method: decks.list\n  params: {}\n- method: api.describe\n  params: {}\n",
         ],
         // collection (5 methods)
-        &["anki-cli", "collection", "get"],
-        &["anki-cli", "collection", "sync"],
+        &["ankic", "collection", "get"],
+        &["ankic", "collection", "sync"],
         &[
-            "anki-cli",
+            "ankic",
             "collection",
             "sync",
             "--include-media",
             "--no-wait",
         ],
-        &["anki-cli", "collection", "refresh"],
+        &["ankic", "collection", "refresh"],
         &[
-            "anki-cli",
+            "ankic",
             "collection",
             "refresh",
             "--target",
             "cachesAndWindows",
         ],
-        &["anki-cli", "collection", "check-integrity"],
-        &["anki-cli", "collection", "undo"],
+        &["ankic", "collection", "check-integrity"],
+        &["ankic", "collection", "undo"],
         // operations (2 methods + wait)
-        &["anki-cli", "operations", "get", "op-1"],
-        &["anki-cli", "operations", "cancel", "op-1"],
-        &["anki-cli", "operations", "wait", "op-1"],
+        &["ankic", "operations", "get", "op-1"],
+        &["ankic", "operations", "cancel", "op-1"],
+        &["ankic", "operations", "wait", "op-1"],
         // decks (6 methods)
-        &["anki-cli", "decks", "list"],
-        &["anki-cli", "decks", "get", "--name", "Default"],
-        &["anki-cli", "decks", "get", "--id", "1"],
-        &["anki-cli", "decks", "create", "Japanese::Vocab"],
+        &["ankic", "decks", "list"],
+        &["ankic", "decks", "get", "--name", "Default"],
+        &["ankic", "decks", "get", "--id", "1"],
+        &["ankic", "decks", "create", "Japanese::Vocab"],
         &[
-            "anki-cli",
+            "ankic",
             "decks",
             "update",
             "--name",
@@ -332,7 +332,7 @@ pub(crate) fn core_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "NewDeck",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "decks",
             "update",
             "--id",
@@ -341,7 +341,7 @@ pub(crate) fn core_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "RenamedDeck",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "decks",
             "delete",
             "--name",
@@ -349,7 +349,7 @@ pub(crate) fn core_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "--delete-cards",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "decks",
             "counts",
             "--name",
@@ -357,11 +357,11 @@ pub(crate) fn core_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "--include-children",
         ],
         // deck-presets (6 methods)
-        &["anki-cli", "deck-presets", "list"],
-        &["anki-cli", "deck-presets", "get", "--name", "Default"],
-        &["anki-cli", "deck-presets", "get", "--id", "1"],
+        &["ankic", "deck-presets", "list"],
+        &["ankic", "deck-presets", "get", "--name", "Default"],
+        &["ankic", "deck-presets", "get", "--id", "1"],
         &[
-            "anki-cli",
+            "ankic",
             "deck-presets",
             "create",
             "FastReview",
@@ -369,7 +369,7 @@ pub(crate) fn core_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "Default",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "deck-presets",
             "update",
             "--name",
@@ -380,7 +380,7 @@ pub(crate) fn core_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "newPerDay: 30",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "deck-presets",
             "assign",
             "--preset-name",
@@ -390,7 +390,7 @@ pub(crate) fn core_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "--reschedule-fsrs",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "deck-presets",
             "delete",
             "--name",
@@ -399,18 +399,18 @@ pub(crate) fn core_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "Default",
         ],
         // notes (12 methods)
-        &["anki-cli", "notes", "get", "1700000000001"],
+        &["ankic", "notes", "get", "1700000000001"],
         &[
-            "anki-cli",
+            "ankic",
             "notes",
             "get-many",
             "1700000000001",
             "1700000000002",
         ],
-        &["anki-cli", "notes", "search", "deck:Default", "--limit", "10"],
-        &["anki-cli", "notes", "search", "deck:Default", "--all"],
+        &["ankic", "notes", "search", "deck:Default", "--limit", "10"],
+        &["ankic", "notes", "search", "deck:Default", "--all"],
         &[
-            "anki-cli",
+            "ankic",
             "notes",
             "validate",
             "--deck",
@@ -423,14 +423,14 @@ pub(crate) fn core_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "vocab",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "notes",
             "validate-many",
             "--notes",
             r#"[{"deck":{"name":"Default"},"noteType":{"name":"Basic"},"fields":{"Front":"Q","Back":"A"}}]"#,
         ],
         &[
-            "anki-cli",
+            "ankic",
             "notes",
             "create",
             "--deck",
@@ -443,7 +443,7 @@ pub(crate) fn core_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "jlpt",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "notes",
             "create",
             "--deck-id",
@@ -454,7 +454,7 @@ pub(crate) fn core_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "Front: 犬\nBack: dog",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "notes",
             "create-many",
             "--notes",
@@ -462,7 +462,7 @@ pub(crate) fn core_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "--atomic",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "notes",
             "update",
             "1700000000001",
@@ -471,9 +471,9 @@ pub(crate) fn core_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "--tag",
             "reviewed",
         ],
-        &["anki-cli", "notes", "delete", "1700000000001"],
+        &["ankic", "notes", "delete", "1700000000001"],
         &[
-            "anki-cli",
+            "ankic",
             "notes",
             "plan-conversion",
             "--source-name",
@@ -482,7 +482,7 @@ pub(crate) fn core_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "Basic (and reversed card)",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "notes",
             "convert",
             "1700000000001",
@@ -496,7 +496,7 @@ pub(crate) fn core_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "plan-tok-1",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "notes",
             "find-empty",
             "--criterion",
@@ -505,29 +505,29 @@ pub(crate) fn core_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "deck:Default",
         ],
         // cards (7 methods)
-        &["anki-cli", "cards", "get", "1700000000101"],
+        &["ankic", "cards", "get", "1700000000101"],
         &[
-            "anki-cli",
+            "ankic",
             "cards",
             "get-many",
             "1700000000101",
             "1700000000102",
         ],
-        &["anki-cli", "cards", "search", "is:due", "--limit", "25"],
-        &["anki-cli", "cards", "search", "is:due", "--all"],
-        &["anki-cli", "cards", "render", "1700000000101"],
+        &["ankic", "cards", "search", "is:due", "--limit", "25"],
+        &["ankic", "cards", "search", "is:due", "--all"],
+        &["ankic", "cards", "render", "1700000000101"],
         &[
-            "anki-cli",
+            "ankic",
             "cards",
             "move",
             "--deck",
             "Archive",
             "1700000000101",
         ],
-        &["anki-cli", "cards", "suspend", "1700000000101"],
-        &["anki-cli", "cards", "unsuspend", "1700000000101"],
+        &["ankic", "cards", "suspend", "1700000000101"],
+        &["ankic", "cards", "unsuspend", "1700000000101"],
         &[
-            "anki-cli",
+            "ankic",
             "cards",
             "flags",
             "--flag",
@@ -535,9 +535,9 @@ pub(crate) fn core_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "1700000000101",
         ],
         // tags (5 methods)
-        &["anki-cli", "tags", "list"],
+        &["ankic", "tags", "list"],
         &[
-            "anki-cli",
+            "ankic",
             "tags",
             "add",
             "--note-id",
@@ -546,7 +546,7 @@ pub(crate) fn core_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "important",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "tags",
             "remove",
             "--note-id",
@@ -555,7 +555,7 @@ pub(crate) fn core_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "important",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "tags",
             "replace",
             "--from",
@@ -566,7 +566,7 @@ pub(crate) fn core_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "1700000000001",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "tags",
             "replace",
             "--from",
@@ -575,13 +575,13 @@ pub(crate) fn core_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "new_tag",
             "--all-notes",
         ],
-        &["anki-cli", "tags", "delete-unused"],
+        &["ankic", "tags", "delete-unused"],
         // note-types (8 methods)
-        &["anki-cli", "note-types", "list"],
-        &["anki-cli", "note-types", "get", "--name", "Basic"],
-        &["anki-cli", "note-types", "get", "--id", "1700000000000"],
+        &["ankic", "note-types", "list"],
+        &["ankic", "note-types", "get", "--name", "Basic"],
+        &["ankic", "note-types", "get", "--id", "1700000000000"],
         &[
-            "anki-cli",
+            "ankic",
             "note-types",
             "create",
             "--name",
@@ -592,7 +592,7 @@ pub(crate) fn core_domain_cli_cases() -> &'static [&'static [&'static str]] {
             r#"[{"name":"Recognition","questionHtml":"{{Word}}","answerHtml":"{{FrontSide}}<hr>{{Meaning}}"}]"#,
         ],
         &[
-            "anki-cli",
+            "ankic",
             "note-types",
             "update",
             "--name",
@@ -601,7 +601,7 @@ pub(crate) fn core_domain_cli_cases() -> &'static [&'static [&'static str]] {
             ".card { font-size: 20px; }",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "note-types",
             "edit-structure",
             "--name",
@@ -610,14 +610,14 @@ pub(crate) fn core_domain_cli_cases() -> &'static [&'static [&'static str]] {
             r#"[{"op":"addField","field":{"name":"Example"}}]"#,
         ],
         &[
-            "anki-cli",
+            "ankic",
             "note-types",
             "template-usage",
             "--name",
             "Basic",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "note-types",
             "replace-text",
             "--find",
@@ -630,7 +630,7 @@ pub(crate) fn core_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "css",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "note-types",
             "replace-text",
             "--find",
@@ -640,7 +640,7 @@ pub(crate) fn core_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "--all-note-types",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "note-types",
             "delete-unused",
             "--name",
@@ -652,7 +652,7 @@ pub(crate) fn core_domain_cli_cases() -> &'static [&'static [&'static str]] {
 #[test]
 fn escape_hatches_and_schema_local_contract() {
     // Local schema listing
-    let cli_list = Cli::try_parse_from(["anki-cli", "schema"]).unwrap();
+    let cli_list = Cli::try_parse_from(["ankic", "schema"]).unwrap();
     match to_rpc_plan(&cli_list.command).unwrap() {
         RpcPlan::Local(val) => {
             assert_eq!(val["count"], 96);
@@ -662,7 +662,7 @@ fn escape_hatches_and_schema_local_contract() {
     }
 
     // Local schema method inspection
-    let cli_method = Cli::try_parse_from(["anki-cli", "schema", "notes.create"]).unwrap();
+    let cli_method = Cli::try_parse_from(["ankic", "schema", "notes.create"]).unwrap();
     match to_rpc_plan(&cli_method.command).unwrap() {
         RpcPlan::Local(val) => {
             assert_eq!(val["method"], "notes.create");
@@ -673,7 +673,7 @@ fn escape_hatches_and_schema_local_contract() {
     }
 
     // Local schema errors and limits
-    let cli_errors = Cli::try_parse_from(["anki-cli", "schema", "--errors"]).unwrap();
+    let cli_errors = Cli::try_parse_from(["ankic", "schema", "--errors"]).unwrap();
     match to_rpc_plan(&cli_errors.command).unwrap() {
         RpcPlan::Local(val) => {
             assert!(val["errors"].is_object());
@@ -684,14 +684,14 @@ fn escape_hatches_and_schema_local_contract() {
 
     // Paginate plan check
     let cli_paginate =
-        Cli::try_parse_from(["anki-cli", "notes", "search", "deck:Default", "--all"]).unwrap();
+        Cli::try_parse_from(["ankic", "notes", "search", "deck:Default", "--all"]).unwrap();
     assert!(matches!(
         to_rpc_plan(&cli_paginate.command).unwrap(),
         RpcPlan::Paginate { .. }
     ));
 
     // WaitOperation plan check
-    let cli_wait = Cli::try_parse_from(["anki-cli", "operations", "wait", "op-1"]).unwrap();
+    let cli_wait = Cli::try_parse_from(["ankic", "operations", "wait", "op-1"]).unwrap();
     assert!(matches!(
         to_rpc_plan(&cli_wait.command).unwrap(),
         RpcPlan::WaitOperation { .. }
@@ -775,11 +775,11 @@ fn core_domain_subcommands_conform_to_schema() {
 fn extended_domain_cli_cases() -> &'static [&'static [&'static str]] {
     &[
         // media (5 methods)
-        &["anki-cli", "media", "list"],
-        &["anki-cli", "media", "list", "--pattern", "*.png"],
-        &["anki-cli", "media", "get", "cat.png"],
+        &["ankic", "media", "list"],
+        &["ankic", "media", "list", "--pattern", "*.png"],
+        &["ankic", "media", "get", "cat.png"],
         &[
-            "anki-cli",
+            "ankic",
             "media",
             "store",
             "--filename",
@@ -794,7 +794,7 @@ fn extended_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "media",
             "store",
             "--filename",
@@ -805,7 +805,7 @@ fn extended_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "replace",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "media",
             "store",
             "--filename",
@@ -815,12 +815,12 @@ fn extended_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "--collision",
             "error",
         ],
-        &["anki-cli", "media", "delete", "cat.png"],
-        &["anki-cli", "media", "directory"],
+        &["ankic", "media", "delete", "cat.png"],
+        &["ankic", "media", "directory"],
         // packages (2 methods)
-        &["anki-cli", "packages", "import", "/tmp/deck.apkg"],
+        &["ankic", "packages", "import", "/tmp/deck.apkg"],
         &[
-            "anki-cli",
+            "ankic",
             "packages",
             "export",
             "--name",
@@ -830,7 +830,7 @@ fn extended_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "--include-scheduling",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "packages",
             "export",
             "--id",
@@ -839,20 +839,20 @@ fn extended_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "/tmp/out.apkg",
         ],
         // scheduling (9 methods)
-        &["anki-cli", "scheduling", "get", "1700000000010"],
-        &["anki-cli", "scheduling", "queue"],
-        &["anki-cli", "scheduling", "queue", "--fetch-limit", "25"],
-        &["anki-cli", "scheduling", "predict", "1700000000010"],
-        &["anki-cli", "scheduling", "due", "1700000000010"],
+        &["ankic", "scheduling", "get", "1700000000010"],
+        &["ankic", "scheduling", "queue"],
+        &["ankic", "scheduling", "queue", "--fetch-limit", "25"],
+        &["ankic", "scheduling", "predict", "1700000000010"],
+        &["ankic", "scheduling", "due", "1700000000010"],
         &[
-            "anki-cli",
+            "ankic",
             "scheduling",
             "due",
             "1700000000010",
             "--include-learn-ahead",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "scheduling",
             "answer",
             "1700000000010",
@@ -864,20 +864,20 @@ fn extended_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "2400",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "scheduling",
             "answer-many",
             "--answers",
             r#"[{"cardId":"1700000000010","rating":"good","stateToken":"tok-1"}]"#,
         ],
         &[
-            "anki-cli",
+            "ankic",
             "scheduling",
             "answer-many",
             "--answers=- cardId: '1700000000010'\n  rating: easy\n  stateToken: tok-2\n  elapsedMs: 1200",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "scheduling",
             "reposition",
             "--starting-from",
@@ -890,7 +890,7 @@ fn extended_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "1700000000011",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "scheduling",
             "reset",
             "--no-restore-position",
@@ -899,7 +899,7 @@ fn extended_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "1700000000010",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "scheduling",
             "set-due-date",
             "--days",
@@ -907,9 +907,9 @@ fn extended_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "1700000000010",
         ],
         // reviews (2 methods)
-        &["anki-cli", "reviews", "list"],
+        &["ankic", "reviews", "list"],
         &[
-            "anki-cli",
+            "ankic",
             "reviews",
             "list",
             "--card-id",
@@ -921,7 +921,7 @@ fn extended_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "50",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "reviews",
             "list",
             "--deck-name",
@@ -931,9 +931,9 @@ fn extended_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "current",
             "--all",
         ],
-        &["anki-cli", "reviews", "latest-id"],
+        &["ankic", "reviews", "latest-id"],
         &[
-            "anki-cli",
+            "ankic",
             "reviews",
             "latest-id",
             "--deck-id",
@@ -942,23 +942,23 @@ fn extended_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "home",
         ],
         // statistics (4 methods)
-        &["anki-cli", "statistics", "today"],
-        &["anki-cli", "statistics", "review-days"],
-        &["anki-cli", "statistics", "summary"],
-        &["anki-cli", "statistics", "summary", "--name", "Default"],
-        &["anki-cli", "statistics", "summary", "--id", "1"],
-        &["anki-cli", "statistics", "html"],
-        &["anki-cli", "statistics", "html", "--name", "Default"],
-        &["anki-cli", "statistics", "html", "--id", "1"],
+        &["ankic", "statistics", "today"],
+        &["ankic", "statistics", "review-days"],
+        &["ankic", "statistics", "summary"],
+        &["ankic", "statistics", "summary", "--name", "Default"],
+        &["ankic", "statistics", "summary", "--id", "1"],
+        &["ankic", "statistics", "html"],
+        &["ankic", "statistics", "html", "--name", "Default"],
+        &["ankic", "statistics", "html", "--id", "1"],
         // profiles (3 methods)
-        &["anki-cli", "profiles", "list"],
-        &["anki-cli", "profiles", "active"],
-        &["anki-cli", "profiles", "switch", "User 1"],
+        &["ankic", "profiles", "list"],
+        &["ankic", "profiles", "active"],
+        &["ankic", "profiles", "switch", "User 1"],
         // access (1 method)
-        &["anki-cli", "access", "request-permission"],
+        &["ankic", "access", "request-permission"],
         // advanced (2 methods)
         &[
-            "anki-cli",
+            "ankic",
             "advanced",
             "cards-update",
             "1700000000010",
@@ -978,7 +978,7 @@ fn extended_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "{\"k\":1}",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "advanced",
             "cards-update",
             "1700000000010",
@@ -986,22 +986,22 @@ fn extended_domain_cli_cases() -> &'static [&'static [&'static str]] {
             r#"{"intervalDays": 7}"#,
         ],
         &[
-            "anki-cli",
+            "ankic",
             "advanced",
             "reviews-import",
             "--reviews",
             r#"[{"id":"1700000000000","cardId":"1700000000010","rating":"good","interval":{"value":5,"unit":"days"},"previousInterval":{"value":1,"unit":"days"},"factor":{"encoding":"legacySm2EasePermille","value":2500},"elapsedMs":1500,"kind":"review"}]"#,
         ],
         &[
-            "anki-cli",
+            "ankic",
             "advanced",
             "reviews-import",
             "--reviews=- id: '1700000000001'\n  cardId: '1700000000010'\n  rating: hard\n  interval:\n    value: 60\n    unit: seconds\n  previousInterval:\n    value: 0\n    unit: seconds\n  factor:\n    encoding: legacySm2EasePermille\n    value: 2500\n  elapsedMs: 2200\n  kind: learning",
         ],
         // gui (15 methods: browser [3], editors [3], reviewer [6], application [3])
-        &["anki-cli", "gui", "browser-open"],
+        &["ankic", "gui", "browser-open"],
         &[
-            "anki-cli",
+            "ankic",
             "gui",
             "browser-open",
             "--query",
@@ -1011,25 +1011,25 @@ fn extended_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "--sort-dir",
             "ascending",
         ],
-        &["anki-cli", "gui", "browser-selection"],
+        &["ankic", "gui", "browser-selection"],
         &[
-            "anki-cli",
+            "ankic",
             "gui",
             "browser-select",
             "--card-id",
             "1700000000010",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "gui",
             "browser-select",
             "--note-id",
             "1700000000001",
         ],
-        &["anki-cli", "gui", "editor-open-note", "1700000000001"],
-        &["anki-cli", "gui", "editor-open-add"],
+        &["ankic", "gui", "editor-open-note", "1700000000001"],
+        &["ankic", "gui", "editor-open-add"],
         &[
-            "anki-cli",
+            "ankic",
             "gui",
             "editor-open-add",
             "--deck-name",
@@ -1042,14 +1042,14 @@ fn extended_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "study",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "gui",
             "editor-open-add",
             "--note",
             r#"{"deck":{"name":"Default"},"noteType":{"name":"Basic"},"fields":{"Front":"Q","Back":"A"},"tags":["t1"]}"#,
         ],
         &[
-            "anki-cli",
+            "ankic",
             "gui",
             "editor-update-draft",
             "editor-1",
@@ -1065,7 +1065,7 @@ fn extended_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "replace",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "gui",
             "editor-update-draft",
             "editor-1",
@@ -1074,30 +1074,30 @@ fn extended_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "--mode",
             "append",
         ],
-        &["anki-cli", "gui", "reviewer-get"],
+        &["ankic", "gui", "reviewer-get"],
         &[
-            "anki-cli",
+            "ankic",
             "gui",
             "reviewer-start-timer",
             "--state-token",
             "rev-tok-1",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "gui",
             "reviewer-show-question",
             "--state-token",
             "rev-tok-1",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "gui",
             "reviewer-show-answer",
             "--state-token",
             "rev-tok-1",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "gui",
             "reviewer-answer",
             "--state-token",
@@ -1106,15 +1106,15 @@ fn extended_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "good",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "gui",
             "reviewer-play-audio",
             "--state-token",
             "rev-tok-1",
         ],
-        &["anki-cli", "gui", "navigate", "deckBrowser"],
+        &["ankic", "gui", "navigate", "deckBrowser"],
         &[
-            "anki-cli",
+            "ankic",
             "gui",
             "navigate",
             "deckOverview",
@@ -1122,22 +1122,22 @@ fn extended_domain_cli_cases() -> &'static [&'static [&'static str]] {
             "Default",
         ],
         &[
-            "anki-cli",
+            "ankic",
             "gui",
             "navigate",
             "review",
             "--deck-id",
             "1",
         ],
-        &["anki-cli", "gui", "import-file"],
+        &["ankic", "gui", "import-file"],
         &[
-            "anki-cli",
+            "ankic",
             "gui",
             "import-file",
             "--path",
             "/tmp/deck.apkg",
         ],
-        &["anki-cli", "gui", "exit"],
+        &["ankic", "gui", "exit"],
     ]
 }
 

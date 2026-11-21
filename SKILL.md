@@ -1,17 +1,17 @@
 ---
 name: anki
-description: Interact with a running Anki Desktop instance via anki-cli (Anki-Connect API v1). Use when querying or modifying decks, notes, cards, tags, scheduling, media, statistics, or GUI state in Anki.
+description: Interact with a running Anki Desktop instance via ankic (Anki-Connect API v1). Use when querying or modifying decks, notes, cards, tags, scheduling, media, statistics, or GUI state in Anki.
 ---
 
-# Anki (`anki-cli`)
+# Anki (`ankic`)
 
-Use `anki-cli` to interact with Anki Desktop over Anki-Connect API v1 (`http://127.0.0.1:8765/api/v1` by default; override with `--url` / `ANKI_CONNECT_URL` and `--api-key` / `ANKI_CONNECT_API_KEY`).
+Use `ankic` to interact with Anki Desktop over Anki-Connect API v1 (`http://127.0.0.1:8765/api/v1` by default; override with `--url` / `ANKI_CONNECT_URL` and `--api-key` / `ANKI_CONNECT_API_KEY`).
 
 ## Output, Input, Session & Validation Behavior
 
 - **YAML-by-default output:** Both `stdout` (results) and `stderr` (structured errors) default to compact **YAML** for token efficiency. Override with `--format <yaml|json|json-pretty>` (or convenience aliases `--json` and `--pretty`).
 - **YAML & JSON inputs:** `--params`, `--fields`, `--stdin`, and `batch` (`--commands`, `--file`, `--stdin`) accept **both YAML and JSON** interchangeably.
-- **Scope-aware `--session` / `ANKI_CONNECT_SESSION`:** When a session ID is configured, `anki-cli` automatically injects `"session"` **only** into `scope: "collection"` methods and omits it on `scope: "application"` methods (such as `operations.get`, `api.describe`, `api.execute`, `profiles.*`, `access.requestPermission`, and `gui.application.*`).
+- **Scope-aware `--session` / `ANKI_CONNECT_SESSION`:** When a session ID is configured, `ankic` automatically injects `"session"` **only** into `scope: "collection"` methods and omits it on `scope: "application"` methods (such as `operations.get`, `api.describe`, `api.execute`, `profiles.*`, `access.requestPermission`, and `gui.application.*`).
 - **Pre-flight schema validation:** All RPC calls are validated client-side against the embedded `api-v1.schema.json` before any HTTP request is sent (failing fast with exit code `2` on invalid parameters or unknown methods). Pass `--no-validate` to bypass.
 - **Deterministic exit codes:** `0` = success, `2` = CLI / input / pre-flight validation error (`error.kind: cli`), `3` = transport / HTTP error (`error.kind: http`), `4` = JSON-RPC or failed/cancelled operation (`error.kind: rpc` or `operation`), `5` = operation polling timeout (`error.kind: timeout`).
 
@@ -19,15 +19,15 @@ Use `anki-cli` to interact with Anki Desktop over Anki-Connect API v1 (`http://1
 
 1. **Verify connectivity & capture session:**
    ```bash
-   anki-cli collection get
+   ankic collection get
    ```
    Pass `--session <session>` (or set `ANKI_CONNECT_SESSION`) on subsequent collection calls to guard against profile switches.
 
 2. **Discover any method's schema on demand (offline, no Anki required):**
    ```bash
-   anki-cli schema --filter noteTypes
-   anki-cli schema notes.create
-   anki-cli schema --errors
+   ankic schema --filter noteTypes
+   ankic schema notes.create
+   ankic schema --errors
    ```
 
 3. **Use ergonomic subcommands across all 21 namespaces (96 API v1 methods):**
@@ -56,14 +56,14 @@ Use `anki-cli` to interact with Anki Desktop over Anki-Connect API v1 (`http://1
 4. **Batch & escape-hatch workflows:**
    - **Batch (`batch`):** Execute multiple `{method, params}` items sequentially via `api.execute` (`--mode execute`, default, polls `OperationHandle` unless `--no-wait`) or as a JSON-RPC array (`--mode transport`):
      ```bash
-     anki-cli batch --mode execute --commands '[{"method":"decks.create","params":{"name":"Japanese"}},{"method":"collection.sync","params":{}}]'
-     anki-cli batch --mode transport --file commands.yaml
+     ankic batch --mode execute --commands '[{"method":"decks.create","params":{"name":"Japanese"}},{"method":"collection.sync","params":{}}]'
+     ankic batch --mode transport --file commands.yaml
      ```
    - **Direct RPC (`call`) & live capabilities (`describe`):**
      ```bash
-     anki-cli describe
-     anki-cli call scheduling.predict --params "cardId: '1700000000001'"
-     anki-cli call notes.get --stdin < params.yaml
+     ankic describe
+     ankic call scheduling.predict --params "cardId: '1700000000001'"
+     ankic call notes.get --stdin < params.yaml
      ```
 
 ## Safety Rules

@@ -1,8 +1,8 @@
 use std::time::Duration;
 
-use anki_skill::client::AnkiClient;
-use anki_skill::commands::{execute_plan, to_rpc_plan, Cli};
-use anki_skill::error::CliError;
+use ankic::client::AnkiClient;
+use ankic::commands::{execute_plan, to_rpc_plan, Cli};
+use ankic::error::CliError;
 use clap::Parser;
 use mockito::{Matcher, Mock, Server};
 use serde_json::{json, Value};
@@ -91,7 +91,7 @@ fn jsonrpc_envelope_and_bearer_auth_header() {
     let client =
         AnkiClient::new(server.url(), Some("secret-token".into()), None).expect("client init");
 
-    let cli = Cli::try_parse_from(["anki-cli", "decks", "list"]).expect("parse cli");
+    let cli = Cli::try_parse_from(["ankic", "decks", "list"]).expect("parse cli");
     let plan = to_rpc_plan(&cli.command).expect("build plan");
     let result = execute_plan(&client, plan).expect("execute decks.list");
 
@@ -210,7 +210,7 @@ fn paginate_all_notes_and_cards_search_across_three_pages() {
         json!({ "ids": ["105"], "nextCursor": null }),
     );
 
-    let cli = Cli::try_parse_from(["anki-cli", "notes", "search", "deck:Default", "--limit", "2", "--all"])
+    let cli = Cli::try_parse_from(["ankic", "notes", "search", "deck:Default", "--limit", "2", "--all"])
         .expect("parse notes search");
     let plan = to_rpc_plan(&cli.command).expect("build notes search plan");
     let notes_result = execute_plan(&client, plan).expect("execute notes.search --all");
@@ -246,7 +246,7 @@ fn paginate_all_notes_and_cards_search_across_three_pages() {
         json!({ "ids": ["205"], "nextCursor": null }),
     );
 
-    let cli = Cli::try_parse_from(["anki-cli", "cards", "search", "is:due", "--all"])
+    let cli = Cli::try_parse_from(["ankic", "cards", "search", "is:due", "--all"])
         .expect("parse cards search");
     let plan = to_rpc_plan(&cli.command).expect("build cards search plan");
     let cards_result = execute_plan(&client, plan).expect("execute cards.search --all");
@@ -484,7 +484,7 @@ fn batch_execute_mode_calls_api_execute_and_polls_operation() {
     .expect(1);
 
     let cli = Cli::try_parse_from([
-        "anki-cli",
+        "ankic",
         "batch",
         "--mode",
         "execute",
@@ -544,7 +544,7 @@ fn batch_transport_mode_sends_jsonrpc_array_batch() {
         .create();
 
     let cli = Cli::try_parse_from([
-        "anki-cli",
+        "ankic",
         "batch",
         "--mode",
         "transport",
@@ -635,7 +635,7 @@ fn preflight_schema_validation_rejects_invalid_params_with_exit_code_2_before_ht
 
     // 1. Invalid parameter type (integer instead of string id)
     let cli_invalid_param = Cli::try_parse_from([
-        "anki-cli",
+        "ankic",
         "call",
         "notes.get",
         "--params",
@@ -650,7 +650,7 @@ fn preflight_schema_validation_rejects_invalid_params_with_exit_code_2_before_ht
 
     // 2. Unknown method
     let cli_unknown_method =
-        Cli::try_parse_from(["anki-cli", "call", "unknown.method"]).expect("parse unknown method");
+        Cli::try_parse_from(["ankic", "call", "unknown.method"]).expect("parse unknown method");
     let plan = to_rpc_plan(&cli_unknown_method.command).expect("build plan");
     let err = execute_plan(&validating_client, plan)
         .expect_err("unknown method must be rejected before HTTP");
@@ -669,7 +669,7 @@ fn preflight_schema_validation_rejects_invalid_params_with_exit_code_2_before_ht
     .expect(1);
 
     let cli_no_validate = Cli::try_parse_from([
-        "anki-cli",
+        "ankic",
         "--no-validate",
         "call",
         "notes.get",

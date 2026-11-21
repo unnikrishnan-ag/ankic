@@ -1,4 +1,4 @@
-//! Output formatting utilities (YAML / JSON) for `anki-cli`.
+//! Output formatting utilities (YAML / JSON) for `ankic`.
 
 use clap::ValueEnum;
 use serde_json::Value;

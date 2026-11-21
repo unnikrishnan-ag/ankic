@@ -2,10 +2,10 @@ use std::process::ExitCode;
 
 use clap::Parser;
 
-use anki_skill::client::AnkiClient;
-use anki_skill::commands::dispatch;
-use anki_skill::output;
-use anki_skill::Cli;
+use ankic::client::AnkiClient;
+use ankic::commands::dispatch;
+use ankic::output;
+use ankic::Cli;
 
 fn main() -> ExitCode {
     let cli = Cli::parse();

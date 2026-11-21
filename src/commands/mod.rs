@@ -43,7 +43,7 @@ pub use tags::TagsCmd;
 
 #[derive(Parser)]
 #[command(
-    name = "anki-cli",
+    name = "ankic",
     version,
     about = "Anki-Connect API v1 CLI for complete API coverage and LLM agent workflows"
 )]
@@ -506,27 +506,27 @@ mod tests {
 
     #[test]
     fn cli_defaults_to_yaml_output_and_validation_enabled() {
-        let cli = Cli::try_parse_from(["anki-cli", "decks", "list"]).expect("parse cli");
+        let cli = Cli::try_parse_from(["ankic", "decks", "list"]).expect("parse cli");
         assert_eq!(cli.output_format(), OutputFormat::Yaml);
         assert!(!cli.no_validate);
     }
 
     #[test]
     fn cli_resolves_json_and_pretty_flags() {
-        let cli_json = Cli::try_parse_from(["anki-cli", "--json", "decks", "list"]).expect("json");
+        let cli_json = Cli::try_parse_from(["ankic", "--json", "decks", "list"]).expect("json");
         assert_eq!(cli_json.output_format(), OutputFormat::Json);
 
         let cli_format_json =
-            Cli::try_parse_from(["anki-cli", "--format", "json", "decks", "list"])
+            Cli::try_parse_from(["ankic", "--format", "json", "decks", "list"])
                 .expect("format json");
         assert_eq!(cli_format_json.output_format(), OutputFormat::Json);
 
         let cli_pretty =
-            Cli::try_parse_from(["anki-cli", "--pretty", "decks", "list"]).expect("pretty");
+            Cli::try_parse_from(["ankic", "--pretty", "decks", "list"]).expect("pretty");
         assert_eq!(cli_pretty.output_format(), OutputFormat::JsonPretty);
 
         let cli_format_pretty =
-            Cli::try_parse_from(["anki-cli", "-f", "json-pretty", "decks", "list"])
+            Cli::try_parse_from(["ankic", "-f", "json-pretty", "decks", "list"])
                 .expect("format json-pretty");
         assert_eq!(cli_format_pretty.output_format(), OutputFormat::JsonPretty);
     }
@@ -534,7 +534,7 @@ mod tests {
     #[test]
     fn cli_parses_no_validate_and_schema_filter() {
         let cli = Cli::try_parse_from([
-            "anki-cli",
+            "ankic",
             "--no-validate",
             "-f",
             "json",
@@ -548,7 +548,7 @@ mod tests {
     }
 
     fn plan_for(args: &[&str]) -> RpcPlan {
-        let mut argv = vec!["anki-cli"];
+        let mut argv = vec!["ankic"];
         argv.extend_from_slice(args);
         let cli = Cli::try_parse_from(argv).expect("parse cli");
         to_rpc_plan(&cli.command).expect("build rpc plan")
@@ -765,12 +765,12 @@ mod tests {
             .expect_err("array should be rejected");
         assert_eq!(non_obj.exit_code(), 2);
 
-        let empty_batch = Cli::try_parse_from(["anki-cli", "batch", "--commands", "[]"])
+        let empty_batch = Cli::try_parse_from(["ankic", "batch", "--commands", "[]"])
             .expect("parse empty batch");
         let err = to_rpc_plan(&empty_batch.command).expect_err("empty batch should fail");
         assert_eq!(err.exit_code(), 2);
 
-        let missing_method = Cli::try_parse_from(["anki-cli", "batch", "--commands", "- params: {}"])
+        let missing_method = Cli::try_parse_from(["ankic", "batch", "--commands", "- params: {}"])
             .expect("parse missing method");
         let err = to_rpc_plan(&missing_method.command).expect_err("missing method should fail");
         assert_eq!(err.exit_code(), 2);

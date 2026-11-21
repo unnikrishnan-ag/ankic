@@ -1,15 +1,17 @@
 [package]
-name = "anki-skill"
+name = "ankic"
 version = "0.1.0"
 edition = "2021"
+license = "GPL-3.0-or-later"
+repository = "https://github.com/unnikrishnan-ag/ankic"
 description = "Rust CLI for Anki-Connect API v1, designed for complete API coverage and LLM agent skill usage"
 
 [[bin]]
-name = "anki-cli"
+name = "ankic"
 path = "src/main.rs"
 
 [lib]
-name = "anki_skill"
+name = "ankic"
 path = "src/lib.rs"
 
 [dependencies]

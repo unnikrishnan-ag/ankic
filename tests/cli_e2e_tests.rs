@@ -3,7 +3,7 @@ use mockito::Server;
 use serde_json::{json, Value};
 
 fn anki_cmd() -> Command {
-    Command::cargo_bin("anki-cli").expect("anki-cli binary should exist")
+    Command::cargo_bin("ankic").expect("ankic binary should exist")
 }
 
 fn rpc_ok_mock(

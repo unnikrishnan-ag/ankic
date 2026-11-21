@@ -1,6 +1,6 @@
-# anki-skill (`anki-cli`)
+# ankic
 
-A Rust CLI for [Anki-Connect API v1](../anki-connect/API_V1.md) (`POST /api/v1`), built for **100% API coverage** (all 96 methods across 21 namespaces) and **LLM agent skill** usage.
+A Rust CLI for [Anki-Connect API v1](https://git.sr.ht/~foosoft/anki-connect/tree/master/API_V1.md) (`POST /api/v1`), built for **100% API coverage** (all 96 methods across 21 namespaces) and **LLM agent skill** usage.
 
 ## Build & Test
 
@@ -10,7 +10,7 @@ Requires Rust (1.75+ / 2021 edition):
 cargo build --release
 ```
 
-The compiled binary is at `target/release/anki-cli`.
+The compiled binary is at `target/release/ankic`.
 
 Run the full test suite (unit, schema contract, mock HTTP, and compiled binary E2E tests):
 
@@ -46,22 +46,22 @@ cargo clippy --all-targets -- -D warnings
 
 ```bash
 # List all 96 V1 methods offline (YAML output by default)
-anki-cli schema
+ankic schema
 
 # Inspect a method's schema in pretty JSON
-anki-cli schema notes.create --pretty
+ankic schema notes.create --pretty
 
 # Check active collection & capture session
-anki-cli collection get
+ankic collection get
 
 # Create a note using inline YAML --fields
-anki-cli notes create --deck Default --note-type Basic --fields $'Front: 猫\nBack: cat'
+ankic notes create --deck Default --note-type Basic --fields $'Front: 猫\nBack: cat'
 
 # Search notes with cursor auto-pagination across all pages
-anki-cli notes search "deck:Default" --all
+ankic notes search "deck:Default" --all
 
 # Execute a sequential batch via api.execute (polls OperationHandle automatically)
-anki-cli batch --mode execute --commands '
+ankic batch --mode execute --commands '
 - method: decks.create
   params:
     name: Japanese::Vocab
@@ -70,6 +70,6 @@ anki-cli batch --mode execute --commands '
 '
 
 # Call any V1 method directly with YAML or JSON --params
-anki-cli call statistics.getToday
-anki-cli call packages.export --params '{"deck":{"name":"Default"},"path":"/tmp/out.apkg"}'
+ankic call statistics.getToday
+ankic call packages.export --params '{"deck":{"name":"Default"},"path":"/tmp/out.apkg"}'
 ```
