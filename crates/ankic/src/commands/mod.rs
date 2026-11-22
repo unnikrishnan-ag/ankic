@@ -57,7 +57,7 @@ pub struct Cli {
     )]
     pub url: String,
 
-    /// Optional API key (sent as Authorization: Bearer <key>)
+    /// Optional API key (sent as `Authorization: Bearer <key>`)
     #[arg(long, env = "ANKI_CONNECT_API_KEY", global = true)]
     pub api_key: Option<String>,
 

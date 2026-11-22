@@ -29,6 +29,7 @@ dependencies = [
 name = "anki-connect-client"
 version = "0.1.0"
 dependencies = [
+ "jsonschema",
  "mockito",
  "reqwest",
  "serde",
@@ -51,6 +52,13 @@ dependencies = [
  "serde_json",
  "serde_norway",
  "thiserror",
+]
+
+[[package]]
+name = "ankic-codegen"
+version = "0.1.0"
+dependencies = [
+ "serde_json",
 ]
 
 [[package]]

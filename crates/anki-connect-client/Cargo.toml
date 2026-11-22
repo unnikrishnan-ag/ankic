@@ -21,5 +21,6 @@ thiserror = { workspace = true }
 tokio = { workspace = true, optional = true }
 
 [dev-dependencies]
+jsonschema = { workspace = true }
 mockito = { workspace = true }
 tokio = { version = "1", features = ["macros", "rt"] }

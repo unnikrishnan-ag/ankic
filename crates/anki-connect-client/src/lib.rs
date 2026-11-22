@@ -1,8 +1,10 @@
+pub mod api;
 pub mod client;
 pub mod error;
 pub mod protocol;
 #[cfg(feature = "schema")]
 pub mod schema;
+pub mod types;
 
 #[cfg(feature = "blocking")]
 pub use client::blocking;
