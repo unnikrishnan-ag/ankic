@@ -1,3 +1,5 @@
+//! Error types and convenience [`Result`] alias for `anki-connect-client`.
+
 use serde_json::Value;
 use thiserror::Error;
 
@@ -14,29 +16,43 @@ pub enum AnkiError {
 
     /// Non-success HTTP status returned by the Anki-Connect server.
     #[error("HTTP {status}: {message}")]
-    HttpStatus { status: u16, message: String },
+    HttpStatus {
+        /// HTTP status code (e.g., `401`, `403`, `500`).
+        status: u16,
+        /// Response body or canonical HTTP reason phrase.
+        message: String,
+    },
 
     /// JSON-RPC 2.0 error object returned by the server.
     #[error("JSON-RPC error {code}: {message}")]
     Rpc {
+        /// Numeric JSON-RPC or Anki-Connect application error code.
         code: i64,
+        /// Human-readable error message from the server.
         message: String,
+        /// Optional structured error details attached by the server.
         data: Option<Value>,
     },
 
     /// Asynchronous operation terminated in a `failed` or `cancelled` state.
     #[error("Operation {operation_id} {state}: {message}")]
     OperationFailed {
+        /// Identifier of the failed or cancelled operation.
         operation_id: String,
+        /// Terminal operation state (`"failed"` or `"cancelled"`).
         state: String,
+        /// Human-readable failure reason.
         message: String,
+        /// Optional structured error payload from the operation status object.
         error: Option<Value>,
     },
 
     /// Timed out waiting for an asynchronous operation to complete.
     #[error("Timed out waiting for operation {operation_id} after {timeout_secs}s")]
     Timeout {
+        /// Identifier of the operation that did not complete in time.
         operation_id: String,
+        /// Configured timeout duration in seconds.
         timeout_secs: u64,
     },
 

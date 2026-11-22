@@ -6,12 +6,22 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "Rust client library for Anki-Connect API v1"
+keywords = ["anki", "anki-connect", "jsonrpc", "flashcards", "client"]
+categories = ["api-bindings", "asynchronous"]
 
 [features]
 default = ["async", "schema"]
 async = ["dep:tokio"]
 blocking = ["reqwest/blocking"]
 schema = []
+
+[[example]]
+name = "async_basic"
+required-features = ["async"]
+
+[[example]]
+name = "blocking_basic"
+required-features = ["blocking"]
 
 [dependencies]
 reqwest = { workspace = true }

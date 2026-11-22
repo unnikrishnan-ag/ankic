@@ -451,9 +451,8 @@ impl<'a> TypeGen<'a> {
         if let Some(target) = ref_name(def) {
             let target_rust = to_pascal_case(target);
             let mut buf = String::new();
-            if let Some(d) = desc {
-                emit_doc(&mut buf, "", d);
-            }
+            let fallback = format!("Type alias for [`{target_rust}`] (`{def_name}`).");
+            emit_doc(&mut buf, "", desc.unwrap_or(&fallback));
             buf.push_str(&format!("pub type {rust_name} = {target_rust};\n"));
             self.register(rust_name, buf);
             return;
@@ -463,9 +462,8 @@ impl<'a> TypeGen<'a> {
         if let Some(inner) = unwrap_nullable(def) {
             let inner_ty = self.resolve_type(&rust_name, inner);
             let mut buf = String::new();
-            if let Some(d) = desc {
-                emit_doc(&mut buf, "", d);
-            }
+            let fallback = format!("Nullable `{def_name}` value.");
+            emit_doc(&mut buf, "", desc.unwrap_or(&fallback));
             buf.push_str(&format!("pub type {rust_name} = Option<{inner_ty}>;\n"));
             self.register(rust_name, buf);
             return;
@@ -490,9 +488,8 @@ impl<'a> TypeGen<'a> {
             let item_schema = def.get("items").expect("array missing items");
             let item_ty = self.resolve_type(&format!("{rust_name}Item"), item_schema);
             let mut buf = String::new();
-            if let Some(d) = desc {
-                emit_doc(&mut buf, "", d);
-            }
+            let fallback = format!("List of `{def_name}` items.");
+            emit_doc(&mut buf, "", desc.unwrap_or(&fallback));
             buf.push_str(&format!("pub type {rust_name} = Vec<{item_ty}>;\n"));
             self.register(rust_name, buf);
             return;
@@ -501,9 +498,8 @@ impl<'a> TypeGen<'a> {
         // 8. Top-level string scalar.
         if def.get("type").and_then(Value::as_str) == Some("string") {
             let mut buf = String::new();
-            if let Some(d) = desc {
-                emit_doc(&mut buf, "", d);
-            }
+            let fallback = format!("String value for `{def_name}`.");
+            emit_doc(&mut buf, "", desc.unwrap_or(&fallback));
             buf.push_str(&format!("pub type {rust_name} = String;\n"));
             self.register(rust_name, buf);
             return;
@@ -520,9 +516,8 @@ impl<'a> TypeGen<'a> {
             if let Some(addl) = obj.get("additionalProperties").and_then(Value::as_object) {
                 let val_ty = self.resolve_type(&format!("{rust_name}Value"), &Value::Object(addl.clone()));
                 let mut buf = String::new();
-                if let Some(d) = desc {
-                    emit_doc(&mut buf, "", d);
-                }
+                let fallback = format!("Map of `{def_name}` entries.");
+                emit_doc(&mut buf, "", desc.unwrap_or(&fallback));
                 buf.push_str(&format!("pub type {rust_name} = BTreeMap<String, {val_ty}>;\n"));
                 self.register(rust_name, buf);
                 return;
@@ -536,16 +531,22 @@ impl<'a> TypeGen<'a> {
         let state_enum = r#"/// Lifecycle state of an asynchronous operation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum OperationState {
+    /// Operation is queued and waiting to start.
     #[serde(rename = "queued")]
     Queued,
+    /// Operation is currently executing.
     #[serde(rename = "running")]
     Running,
+    /// Operation is waiting for user interaction in Anki.
     #[serde(rename = "waitingForUser")]
     WaitingForUser,
+    /// Operation completed successfully.
     #[serde(rename = "succeeded")]
     Succeeded,
+    /// Operation terminated with an error.
     #[serde(rename = "failed")]
     Failed,
+    /// Operation was cancelled before completion.
     #[serde(rename = "cancelled")]
     Cancelled,
 }
@@ -556,16 +557,26 @@ pub enum OperationState {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Operation {
+    /// Unique operation identifier.
     pub operation_id: String,
+    /// RPC method name that initiated the operation.
     pub method: String,
+    /// Associated collection session token, if collection-scoped.
     pub session: Option<SessionId>,
+    /// Timestamp when the operation was created.
     pub created_at: Timestamp,
+    /// Timestamp when the operation was last updated.
     pub updated_at: Timestamp,
+    /// Whether the operation can be cancelled via `operations.cancel`.
     pub cancellable: bool,
+    /// Optional progress information while the operation is running.
     pub progress: Option<Progress>,
+    /// Current lifecycle state of the operation.
     pub state: OperationState,
+    /// Final result payload when `state` is [`OperationState::Succeeded`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub result: Option<serde_json::Value>,
+    /// Structured error payload when `state` is [`OperationState::Failed`] or [`OperationState::Cancelled`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub error: Option<Error>,
 }
@@ -575,9 +586,8 @@ pub struct Operation {
 
     fn emit_unit_enum(&mut self, rust_name: &str, desc: Option<&str>, variants: &[Value]) {
         let mut buf = String::new();
-        if let Some(d) = desc {
-            emit_doc(&mut buf, "", d);
-        }
+        let fallback = format!("Enumerated values for `{rust_name}`.");
+        emit_doc(&mut buf, "", desc.unwrap_or(&fallback));
         buf.push_str("#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]\n");
         buf.push_str(&format!("pub enum {rust_name} {{\n"));
         for v in variants {
@@ -585,6 +595,7 @@ pub struct Operation {
                 .as_str()
                 .unwrap_or_else(|| panic!("Non-string enum variant in {rust_name}: {v}"));
             let var_name = to_pascal_case(s);
+            emit_doc(&mut buf, "    ", &format!("JSON value `{s}`."));
             buf.push_str(&format!("    #[serde(rename = \"{s}\")]\n"));
             buf.push_str(&format!("    {var_name},\n"));
         }
@@ -612,9 +623,12 @@ pub struct Operation {
                 all_defaultable = false;
             }
 
-            if let Some(pdesc) = prop_schema.get("description").and_then(Value::as_str) {
-                emit_doc(&mut fields_code, "    ", pdesc);
-            }
+            let fallback_field_doc = format!("JSON field `{json_key}`.");
+            let pdesc = prop_schema
+                .get("description")
+                .and_then(Value::as_str)
+                .unwrap_or(&fallback_field_doc);
+            emit_doc(&mut fields_code, "    ", pdesc);
 
             let snake = to_snake_case(json_key);
             let field_ident = escape_ident(&snake);
@@ -641,9 +655,8 @@ pub struct Operation {
         }
 
         let mut buf = String::new();
-        if let Some(d) = desc {
-            emit_doc(&mut buf, "", d);
-        }
+        let fallback_struct_doc = format!("Schema type `{rust_name}`.");
+        emit_doc(&mut buf, "", desc.unwrap_or(&fallback_struct_doc));
         if all_defaultable {
             buf.push_str("#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]\n");
         } else {
@@ -676,9 +689,8 @@ pub struct Operation {
         branches: &[Value],
     ) {
         let mut buf = String::new();
-        if let Some(d) = desc {
-            emit_doc(&mut buf, "", d);
-        }
+        let fallback = format!("Tagged union for `{rust_name}`.");
+        emit_doc(&mut buf, "", desc.unwrap_or(&fallback));
         buf.push_str("#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]\n");
         buf.push_str(&format!("#[serde(tag = \"{tag_field}\")]\n"));
         buf.push_str(&format!("pub enum {rust_name} {{\n"));
@@ -693,6 +705,12 @@ pub struct Operation {
                 .unwrap();
             let variant_name = to_pascal_case(tag_val);
 
+            let fallback_var_doc = format!("Variant tagged with `{tag_field} = \"{tag_val}\"`.");
+            let vdesc = obj
+                .get("description")
+                .and_then(Value::as_str)
+                .unwrap_or(&fallback_var_doc);
+            emit_doc(&mut buf, "    ", vdesc);
             buf.push_str(&format!("    #[serde(rename = \"{tag_val}\")]\n"));
             let sorted_props: BTreeMap<&String, &Value> = props
                 .iter()
@@ -711,6 +729,13 @@ pub struct Operation {
                         prop_schema,
                         is_required,
                     );
+                    let fallback_field_doc = format!("JSON field `{json_key}`.");
+                    let pdesc = prop_schema
+                        .get("description")
+                        .and_then(Value::as_str)
+                        .unwrap_or(&fallback_field_doc);
+                    emit_doc(&mut buf, "        ", pdesc);
+
                     let snake = to_snake_case(json_key);
                     let field_ident = escape_ident(&snake);
                     let mut serde_attrs = Vec::new();
@@ -738,9 +763,8 @@ pub struct Operation {
 
     fn emit_untagged_enum(&mut self, rust_name: &str, desc: Option<&str>, branches: &[Value]) {
         let mut buf = String::new();
-        if let Some(d) = desc {
-            emit_doc(&mut buf, "", d);
-        }
+        let fallback = format!("Untagged union for `{rust_name}`.");
+        emit_doc(&mut buf, "", desc.unwrap_or(&fallback));
         buf.push_str("#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]\n");
         buf.push_str("#[serde(untagged)]\n");
         buf.push_str(&format!("pub enum {rust_name} {{\n"));
@@ -774,6 +798,13 @@ pub struct Operation {
                 format!("Variant{}", idx + 1)
             };
 
+            let fallback_var_doc = format!("Variant `{variant_name}`.");
+            let vdesc = obj
+                .get("description")
+                .and_then(Value::as_str)
+                .unwrap_or(&fallback_var_doc);
+            emit_doc(&mut buf, "    ", vdesc);
+
             let sorted_props: BTreeMap<&String, &Value> = props.iter().collect();
             buf.push_str(&format!("    {variant_name} {{\n"));
             for (json_key, prop_schema) in sorted_props {
@@ -788,6 +819,13 @@ pub struct Operation {
                 if is_result_error_pair && json_key == "result" && matches!(ty.as_str(), "Card" | "Note") {
                     ty = format!("Box<{ty}>");
                 }
+                let fallback_field_doc = format!("JSON field `{json_key}`.");
+                let pdesc = prop_schema
+                    .get("description")
+                    .and_then(Value::as_str)
+                    .unwrap_or(&fallback_field_doc);
+                emit_doc(&mut buf, "        ", pdesc);
+
                 let snake = to_snake_case(json_key);
                 let field_ident = escape_ident(&snake);
                 let mut serde_attrs = Vec::new();
@@ -1049,6 +1087,11 @@ fn generate_api(defs: &Map<String, Value>, methods: &Map<String, Value>, is_asyn
 
     let mut out = String::new();
     out.push_str("// @generated by `ankic-codegen` from `schemas/api-v1.schema.json`. DO NOT EDIT.\n\n");
+    if is_async {
+        out.push_str("//! Generated asynchronous typed namespace APIs for Anki-Connect API v1.\n\n");
+    } else {
+        out.push_str("//! Generated blocking (synchronous) typed namespace APIs for Anki-Connect API v1.\n\n");
+    }
     out.push_str(client_import);
     out.push('\n');
     out.push_str("use crate::error::Result;\n");

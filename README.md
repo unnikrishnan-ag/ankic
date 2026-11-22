@@ -4,7 +4,7 @@ A Rust CLI for [Anki-Connect API v1](https://git.sr.ht/~foosoft/anki-connect/tre
 
 ## Build & Test
 
-Requires Rust (1.75+ / 2021 edition):
+Requires Rust (1.80+ / 2021 edition):
 
 ```bash
 cargo build --release
@@ -72,4 +72,103 @@ ankic batch --mode execute --commands '
 # Call any V1 method directly with YAML or JSON --params
 ankic call statistics.getToday
 ankic call packages.export --params '{"deck":{"name":"Default"},"path":"/tmp/out.apkg"}'
+```
+
+## Using as a Rust Library (`anki-connect-client`)
+
+The `anki-connect-client` crate provides the typed Anki-Connect API v1 client (96 methods across 21 namespaces, async and blocking clients, automatic session scoping, operation polling, and optional pre-flight schema validation) with zero CLI dependencies (`clap`, `serde_norway`, etc.).
+
+### Adding to `Cargo.toml`
+
+```toml
+# Default: async client + embedded schema validation
+anki-connect-client = "0.1"
+
+# Blocking (synchronous) client only, with schema validation
+# anki-connect-client = { version = "0.1", default-features = false, features = ["blocking", "schema"] }
+
+# Minimal async client without the embedded JSON Schema
+# anki-connect-client = { version = "0.1", default-features = false, features = ["async"] }
+```
+
+### Async Example
+
+```rust,no_run
+use std::collections::BTreeMap;
+use anki_connect_client::types::{NotesCreateParams, Reference};
+use anki_connect_client::{AnkiClient, Result};
+
+#[tokio::main(flavor = "current_thread")]
+async fn main() -> Result<()> {
+    let client = AnkiClient::builder()
+        .url("http://127.0.0.1:8765/api/v1")
+        .build()?;
+
+    let collection = client.collection().get().await?;
+    let client = client.with_session(collection.session);
+
+    let decks = client.decks().list().await?;
+    println!("Decks: {}", decks.len());
+
+    let fields = BTreeMap::from([
+        ("Front".to_string(), "猫".to_string()),
+        ("Back".to_string(), "cat".to_string()),
+    ]);
+    let created = client
+        .notes()
+        .create(&NotesCreateParams {
+            deck: Reference::name("Default"),
+            note_type: Reference::name("Basic"),
+            fields,
+            duplicates: None,
+            reject_empty_questions: None,
+            session: None,
+            tags: Some(vec!["vocab".to_string()]),
+        })
+        .await?;
+    println!("Created note {}", created.note_id);
+    Ok(())
+}
+```
+
+### Blocking Example
+
+```rust,no_run
+use anki_connect_client::blocking::AnkiClient;
+use anki_connect_client::Result;
+
+fn main() -> Result<()> {
+    let client = AnkiClient::builder()
+        .url("http://127.0.0.1:8765/api/v1")
+        .build_blocking()?;
+
+    let collection = client.collection().get()?;
+    let client = client.with_session(collection.session);
+
+    let decks = client.decks().list()?;
+    println!("Profile `{}` has {} decks", collection.profile, decks.len());
+    Ok(())
+}
+```
+
+### Running the Crate Examples
+
+```bash
+cargo run -p anki-connect-client --example async_basic
+cargo run -p anki-connect-client --example blocking_basic --features blocking
+```
+
+## Workspace Layout & Code Generation
+
+This repository is organized as a Cargo workspace:
+
+- `crates/anki-connect-client` — Standalone Rust client library (typed models, 21 async/blocking namespace sub-clients, JSON-RPC protocol helpers, and embedded schema validator).
+- `crates/ankic` — The `ankic` CLI binary built on top of `anki-connect-client`.
+- `crates/ankic-codegen` — Internal code generator that produces the typed models and namespace APIs from `schemas/api-v1.schema.json`.
+
+To regenerate the typed client code after updating `schemas/api-v1.schema.json`, or verify that checked-in generated files are up to date:
+
+```bash
+cargo run -p ankic-codegen
+cargo run -p ankic-codegen -- --check
 ```

@@ -1,3 +1,5 @@
+//! Synchronous (blocking) HTTP client for Anki-Connect API v1.
+
 use std::fmt;
 use std::thread;
 use std::time::{Duration, Instant};

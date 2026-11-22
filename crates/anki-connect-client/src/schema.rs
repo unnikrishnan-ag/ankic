@@ -1,3 +1,5 @@
+//! Embedded Anki-Connect API v1 JSON Schema introspection and pre-flight parameter validation.
+
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::LazyLock;
 

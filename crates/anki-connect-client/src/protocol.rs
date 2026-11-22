@@ -1,3 +1,5 @@
+//! Transport-agnostic JSON-RPC 2.0 protocol helpers, session scoping, and polling utilities.
+
 use std::fmt;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;

@@ -1,3 +1,5 @@
+//! Asynchronous and blocking HTTP clients and shared [`AnkiClientBuilder`].
+
 use std::fmt;
 use std::time::Duration;
 

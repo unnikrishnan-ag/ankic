@@ -4,34 +4,47 @@ use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 
+/// Schema type `AccessRequestPermissionParams`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct AccessRequestPermissionParams {}
 
+/// Type alias for \[`Permission`\] (`access_requestPermission_Result`).
 pub type AccessRequestPermissionResult = Permission;
 
+/// Schema type `Ack`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Ack {
+    /// JSON field `changed`.
     pub changed: bool,
 }
 
+/// Schema type `AdvancedCardsUpdateParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AdvancedCardsUpdateParams {
+    /// JSON field `cardId`.
     pub card_id: EntityId,
+    /// JSON field `patch`.
     pub patch: RawCardPatch,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Type alias for \[`Card`\] (`advanced_cards_update_Result`).
 pub type AdvancedCardsUpdateResult = Card;
 
+/// Type alias for \[`Count`\] (`advanced_reviews_import_OperationResult`).
 pub type AdvancedReviewsImportOperationResult = Count;
 
+/// Schema type `AdvancedReviewsImportParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AdvancedReviewsImportParams {
+    /// JSON field `reviews`.
     pub reviews: Vec<ReviewImport>,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
@@ -39,57 +52,78 @@ pub struct AdvancedReviewsImportParams {
 /// Operation handle returned by `advanced_reviews_import_Result`.
 pub type AdvancedReviewsImportResult = OperationHandle;
 
+/// Schema type `Answer`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Answer {
+    /// JSON field `cardId`.
     pub card_id: EntityId,
+    /// JSON field `elapsedMs`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub elapsed_ms: Option<u64>,
+    /// JSON field `rating`.
     pub rating: Rating,
+    /// JSON field `stateToken`.
     pub state_token: String,
 }
 
+/// Schema type `AnswerResult`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AnswerResult {
+    /// JSON field `cardId`.
     pub card_id: EntityId,
+    /// JSON field `reviewId`.
     #[serde(default)]
     pub review_id: Option<EntityId>,
+    /// JSON field `scheduling`.
     pub scheduling: SchedulingState,
 }
 
+/// Schema type `ApiDescribeParams`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct ApiDescribeParams {}
 
+/// Type alias for \[`Description`\] (`api_describe_Result`).
 pub type ApiDescribeResult = Description;
 
+/// Type alias for \[`BatchResult`\] (`api_execute_OperationResult`).
 pub type ApiExecuteOperationResult = BatchResult;
 
+/// Schema type `ApiExecuteParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ApiExecuteParams {
+    /// JSON field `commands`.
     pub commands: Vec<Command>,
 }
 
 /// Operation handle returned by `api_execute_Result`.
 pub type ApiExecuteResult = OperationHandle;
 
+/// Schema type `ApplicationExitParams`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct ApplicationExitParams {}
 
+/// Schema type `ApplicationExitResult`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ApplicationExitResult {
+    /// JSON field `accepted`.
     pub accepted: bool,
 }
 
+/// Type alias for \[`ImportResult`\] (`application_importFile_OperationResult`).
 pub type ApplicationImportFileOperationResult = ImportResult;
 
+/// Schema type `ApplicationImportFileParams`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ApplicationImportFileParams {
+    /// JSON field `path`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub path: Option<String>,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
@@ -97,24 +131,33 @@ pub struct ApplicationImportFileParams {
 /// Operation handle returned by `application_importFile_Result`.
 pub type ApplicationImportFileResult = OperationHandle;
 
+/// Type alias for \[`Ack`\] (`application_navigate_OperationResult`).
 pub type ApplicationNavigateOperationResult = Ack;
 
+/// Schema type `ApplicationNavigateParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ApplicationNavigateParams {
+    /// JSON field `deck`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub deck: Option<Reference>,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
+    /// JSON field `view`.
     pub view: ApplicationNavigateParamsView,
 }
 
+/// Enumerated values for `ApplicationNavigateParamsView`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ApplicationNavigateParamsView {
+    /// JSON value `deckBrowser`.
     #[serde(rename = "deckBrowser")]
     DeckBrowser,
+    /// JSON value `deckOverview`.
     #[serde(rename = "deckOverview")]
     DeckOverview,
+    /// JSON value `review`.
     #[serde(rename = "review")]
     Review,
 }
@@ -122,45 +165,64 @@ pub enum ApplicationNavigateParamsView {
 /// Operation handle returned by `application_navigate_Result`.
 pub type ApplicationNavigateResult = OperationHandle;
 
+/// Untagged union for `BatchItem`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum BatchItem {
+    /// Variant `Success`.
     Success {
+        /// JSON field `index`.
         index: u64,
+        /// JSON field `method`.
         method: String,
+        /// JSON field `result`.
         result: serde_json::Value,
     },
+    /// Variant `Error`.
     Error {
+        /// JSON field `error`.
         error: Error,
+        /// JSON field `index`.
         index: u64,
+        /// JSON field `method`.
         method: String,
     },
 }
 
+/// Schema type `BatchResult`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BatchResult {
+    /// JSON field `items`.
     pub items: Vec<BatchItem>,
 }
 
+/// Schema type `BrowserGetSelectionParams`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BrowserGetSelectionParams {
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Type alias for \[`BrowserState`\] (`browser_getSelection_Result`).
 pub type BrowserGetSelectionResult = BrowserState;
 
+/// Type alias for \[`BrowserState`\] (`browser_open_OperationResult`).
 pub type BrowserOpenOperationResult = BrowserState;
 
+/// Schema type `BrowserOpenParams`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BrowserOpenParams {
+    /// JSON field `query`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub query: Option<String>,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
+    /// JSON field `sort`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sort: Option<Sort>,
 }
@@ -168,15 +230,20 @@ pub struct BrowserOpenParams {
 /// Operation handle returned by `browser_open_Result`.
 pub type BrowserOpenResult = OperationHandle;
 
+/// Type alias for \[`BrowserState`\] (`browser_select_OperationResult`).
 pub type BrowserSelectOperationResult = BrowserState;
 
+/// Schema type `BrowserSelectParams`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BrowserSelectParams {
+    /// JSON field `cardIds`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub card_ids: Option<Vec<EntityId>>,
+    /// JSON field `noteIds`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub note_ids: Option<Vec<EntityId>>,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
@@ -184,185 +251,334 @@ pub struct BrowserSelectParams {
 /// Operation handle returned by `browser_select_Result`.
 pub type BrowserSelectResult = OperationHandle;
 
+/// Schema type `BrowserState`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BrowserState {
+    /// JSON field `open`.
     pub open: bool,
+    /// JSON field `selectedCardIds`.
     pub selected_card_ids: Vec<EntityId>,
+    /// JSON field `selectedNoteIds`.
     pub selected_note_ids: Vec<EntityId>,
 }
 
+/// Schema type `Card`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Card {
+    /// JSON field `deck`.
     pub deck: EntitySummary,
+    /// JSON field `flags`.
     pub flags: u64,
+    /// JSON field `homeDeck`.
     #[serde(default)]
     pub home_deck: Option<EntitySummary>,
+    /// JSON field `id`.
     pub id: EntityId,
+    /// JSON field `modifiedAt`.
     pub modified_at: Timestamp,
+    /// JSON field `noteId`.
     pub note_id: EntityId,
+    /// JSON field `scheduling`.
     pub scheduling: SchedulingState,
+    /// JSON field `templateIndex`.
     pub template_index: u64,
 }
 
+/// Untagged union for `CardAnswerItem`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum CardAnswerItem {
-    Success { index: u64, result: AnswerResult },
-    Error { error: Error, index: u64 },
+    /// Variant `Success`.
+    Success {
+        /// JSON field `index`.
+        index: u64,
+        /// JSON field `result`.
+        result: AnswerResult,
+    },
+    /// Variant `Error`.
+    Error {
+        /// JSON field `error`.
+        error: Error,
+        /// JSON field `index`.
+        index: u64,
+    },
 }
 
+/// Untagged union for `CardDueDateItem`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum CardDueDateItem {
-    Success { index: u64, result: Ack },
-    Error { error: Error, index: u64 },
+    /// Variant `Success`.
+    Success {
+        /// JSON field `index`.
+        index: u64,
+        /// JSON field `result`.
+        result: Ack,
+    },
+    /// Variant `Error`.
+    Error {
+        /// JSON field `error`.
+        error: Error,
+        /// JSON field `index`.
+        index: u64,
+    },
 }
 
+/// Untagged union for `CardFlagItem`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum CardFlagItem {
-    Success { index: u64, result: Ack },
-    Error { error: Error, index: u64 },
+    /// Variant `Success`.
+    Success {
+        /// JSON field `index`.
+        index: u64,
+        /// JSON field `result`.
+        result: Ack,
+    },
+    /// Variant `Error`.
+    Error {
+        /// JSON field `error`.
+        error: Error,
+        /// JSON field `index`.
+        index: u64,
+    },
 }
 
+/// Untagged union for `CardGetItem`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum CardGetItem {
-    Success { index: u64, result: Box<Card> },
-    Error { error: Error, index: u64 },
+    /// Variant `Success`.
+    Success {
+        /// JSON field `index`.
+        index: u64,
+        /// JSON field `result`.
+        result: Box<Card>,
+    },
+    /// Variant `Error`.
+    Error {
+        /// JSON field `error`.
+        error: Error,
+        /// JSON field `index`.
+        index: u64,
+    },
 }
 
+/// Untagged union for `CardMoveItem`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum CardMoveItem {
-    Success { index: u64, result: Ack },
-    Error { error: Error, index: u64 },
+    /// Variant `Success`.
+    Success {
+        /// JSON field `index`.
+        index: u64,
+        /// JSON field `result`.
+        result: Ack,
+    },
+    /// Variant `Error`.
+    Error {
+        /// JSON field `error`.
+        error: Error,
+        /// JSON field `index`.
+        index: u64,
+    },
 }
 
+/// Untagged union for `CardResetItem`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum CardResetItem {
-    Success { index: u64, result: Ack },
-    Error { error: Error, index: u64 },
+    /// Variant `Success`.
+    Success {
+        /// JSON field `index`.
+        index: u64,
+        /// JSON field `result`.
+        result: Ack,
+    },
+    /// Variant `Error`.
+    Error {
+        /// JSON field `error`.
+        error: Error,
+        /// JSON field `index`.
+        index: u64,
+    },
 }
 
+/// Untagged union for `CardSuspensionItem`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum CardSuspensionItem {
-    Success { index: u64, result: Ack },
-    Error { error: Error, index: u64 },
+    /// Variant `Success`.
+    Success {
+        /// JSON field `index`.
+        index: u64,
+        /// JSON field `result`.
+        result: Ack,
+    },
+    /// Variant `Error`.
+    Error {
+        /// JSON field `error`.
+        error: Error,
+        /// JSON field `index`.
+        index: u64,
+    },
 }
 
+/// Schema type `CardsGetManyParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CardsGetManyParams {
+    /// JSON field `ids`.
     pub ids: Vec<EntityId>,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Schema type `CardsGetManyResult`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CardsGetManyResult {
+    /// JSON field `items`.
     pub items: Vec<CardGetItem>,
 }
 
+/// Schema type `CardsGetParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CardsGetParams {
+    /// JSON field `id`.
     pub id: EntityId,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Type alias for \[`Card`\] (`cards_get_Result`).
 pub type CardsGetResult = Card;
 
+/// Schema type `CardsMoveParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CardsMoveParams {
+    /// JSON field `deck`.
     pub deck: Reference,
+    /// JSON field `ids`.
     pub ids: Vec<EntityId>,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Schema type `CardsMoveResult`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CardsMoveResult {
+    /// JSON field `items`.
     pub items: Vec<CardMoveItem>,
 }
 
+/// Schema type `CardsRenderParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CardsRenderParams {
+    /// JSON field `id`.
     pub id: EntityId,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Type alias for \[`RenderedCard`\] (`cards_render_Result`).
 pub type CardsRenderResult = RenderedCard;
 
+/// Schema type `CardsSearchParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CardsSearchParams {
+    /// JSON field `cursor`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cursor: Option<String>,
+    /// JSON field `limit`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub limit: Option<u64>,
+    /// JSON field `query`.
     pub query: String,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
+    /// JSON field `sort`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sort: Option<Sort>,
 }
 
+/// Type alias for \[`IdPage`\] (`cards_search_Result`).
 pub type CardsSearchResult = IdPage;
 
+/// Schema type `CardsSetFlagsParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CardsSetFlagsParams {
+    /// JSON field `flag`.
     pub flag: u64,
+    /// JSON field `ids`.
     pub ids: Vec<EntityId>,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Schema type `CardsSetFlagsResult`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CardsSetFlagsResult {
+    /// JSON field `items`.
     pub items: Vec<CardFlagItem>,
 }
 
+/// Schema type `CardsSetSuspendedParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CardsSetSuspendedParams {
+    /// JSON field `ids`.
     pub ids: Vec<EntityId>,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
+    /// JSON field `suspended`.
     pub suspended: bool,
 }
 
+/// Schema type `CardsSetSuspendedResult`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CardsSetSuspendedResult {
+    /// JSON field `items`.
     pub items: Vec<CardSuspensionItem>,
 }
 
+/// Schema type `Collection`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Collection {
+    /// JSON field `profile`.
     pub profile: String,
+    /// JSON field `scheduler`.
     pub scheduler: CollectionScheduler,
+    /// JSON field `session`.
     pub session: SessionId,
 }
 
+/// Type alias for \[`IntegrityResult`\] (`collection_checkIntegrity_OperationResult`).
 pub type CollectionCheckIntegrityOperationResult = IntegrityResult;
 
+/// Schema type `CollectionCheckIntegrityParams`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CollectionCheckIntegrityParams {
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
@@ -370,49 +586,66 @@ pub struct CollectionCheckIntegrityParams {
 /// Operation handle returned by `collection_checkIntegrity_Result`.
 pub type CollectionCheckIntegrityResult = OperationHandle;
 
+/// Schema type `CollectionGetParams`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CollectionGetParams {
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Type alias for \[`Collection`\] (`collection_get_Result`).
 pub type CollectionGetResult = Collection;
 
+/// Schema type `CollectionRefreshParams`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CollectionRefreshParams {
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
+    /// JSON field `target`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub target: Option<CollectionRefreshParamsTarget>,
 }
 
+/// Enumerated values for `CollectionRefreshParamsTarget`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum CollectionRefreshParamsTarget {
+    /// JSON value `windows`.
     #[serde(rename = "windows")]
     Windows,
+    /// JSON value `cachesAndWindows`.
     #[serde(rename = "cachesAndWindows")]
     CachesAndWindows,
 }
 
+/// Type alias for \[`Ack`\] (`collection_refresh_Result`).
 pub type CollectionRefreshResult = Ack;
 
+/// Enumerated values for `CollectionScheduler`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum CollectionScheduler {
+    /// JSON value `sm2`.
     #[serde(rename = "sm2")]
     Sm2,
+    /// JSON value `fsrs`.
     #[serde(rename = "fsrs")]
     Fsrs,
 }
 
+/// Type alias for \[`SyncResult`\] (`collection_sync_OperationResult`).
 pub type CollectionSyncOperationResult = SyncResult;
 
+/// Schema type `CollectionSyncParams`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CollectionSyncParams {
+    /// JSON field `includeMedia`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub include_media: Option<bool>,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
@@ -420,11 +653,14 @@ pub struct CollectionSyncParams {
 /// Operation handle returned by `collection_sync_Result`.
 pub type CollectionSyncResult = OperationHandle;
 
+/// Type alias for \[`UndoResult`\] (`collection_undo_OperationResult`).
 pub type CollectionUndoOperationResult = UndoResult;
 
+/// Schema type `CollectionUndoParams`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CollectionUndoParams {
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
@@ -432,95 +668,148 @@ pub struct CollectionUndoParams {
 /// Operation handle returned by `collection_undo_Result`.
 pub type CollectionUndoResult = OperationHandle;
 
+/// Schema type `Command`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Command {
+    /// JSON field `method`.
     pub method: String,
+    /// JSON field `params`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub params: Option<BTreeMap<String, serde_json::Value>>,
 }
 
+/// Schema type `ConversionMapping`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ConversionMapping {
+    /// JSON field `source`.
     #[serde(default)]
     pub source: Option<String>,
+    /// JSON field `target`.
     pub target: String,
 }
 
+/// Schema type `ConversionPlan`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ConversionPlan {
+    /// JSON field `fields`.
     pub fields: Vec<ConversionMapping>,
+    /// JSON field `source`.
     pub source: EntitySummary,
+    /// JSON field `target`.
     pub target: EntitySummary,
+    /// JSON field `templates`.
     pub templates: Vec<ConversionMapping>,
+    /// JSON field `token`.
     pub token: String,
 }
 
+/// Schema type `Count`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Count {
+    /// JSON field `changedCount`.
     pub changed_count: u64,
 }
 
+/// Schema type `Deck`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Deck {
+    /// JSON field `id`.
     pub id: EntityId,
+    /// JSON field `kind`.
     pub kind: DeckKind,
+    /// JSON field `name`.
     pub name: String,
+    /// JSON field `presetId`.
     #[serde(default)]
     pub preset_id: Option<EntityId>,
 }
 
+/// Schema type `DeckCounts`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DeckCounts {
+    /// JSON field `deckId`.
     pub deck_id: EntityId,
+    /// JSON field `learning`.
     pub learning: u64,
+    /// JSON field `new`.
     pub new: u64,
+    /// JSON field `review`.
     pub review: u64,
+    /// JSON field `total`.
     pub total: u64,
 }
 
+/// Untagged union for `DeckDeleteItem`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum DeckDeleteItem {
-    Success { index: u64, result: Ack },
-    Error { error: Error, index: u64 },
+    /// Variant `Success`.
+    Success {
+        /// JSON field `index`.
+        index: u64,
+        /// JSON field `result`.
+        result: Ack,
+    },
+    /// Variant `Error`.
+    Error {
+        /// JSON field `error`.
+        error: Error,
+        /// JSON field `index`.
+        index: u64,
+    },
 }
 
+/// Enumerated values for `DeckKind`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum DeckKind {
+    /// JSON value `normal`.
     #[serde(rename = "normal")]
     Normal,
+    /// JSON value `filtered`.
     #[serde(rename = "filtered")]
     Filtered,
 }
 
+/// Schema type `DeckPreset`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DeckPreset {
+    /// JSON field `id`.
     pub id: EntityId,
+    /// JSON field `modifiedAt`.
     pub modified_at: Timestamp,
+    /// JSON field `name`.
     pub name: String,
+    /// JSON field `settings`.
     pub settings: PresetSettings,
 }
 
+/// Schema type `DeckPresetsAssignOperationResult`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DeckPresetsAssignOperationResult {
+    /// JSON field `items`.
     pub items: Vec<PresetAssignmentItem>,
 }
 
+/// Schema type `DeckPresetsAssignParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DeckPresetsAssignParams {
+    /// JSON field `decks`.
     pub decks: Vec<Reference>,
+    /// JSON field `preset`.
     pub preset: Reference,
+    /// JSON field `rescheduleFsrs`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reschedule_fsrs: Option<bool>,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
@@ -528,26 +817,36 @@ pub struct DeckPresetsAssignParams {
 /// Operation handle returned by `deckPresets_assign_Result`.
 pub type DeckPresetsAssignResult = OperationHandle;
 
+/// Schema type `DeckPresetsCreateParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DeckPresetsCreateParams {
+    /// JSON field `cloneFrom`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub clone_from: Option<Reference>,
+    /// JSON field `name`.
     pub name: String,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Type alias for \[`DeckPreset`\] (`deckPresets_create_Result`).
 pub type DeckPresetsCreateResult = DeckPreset;
 
+/// Type alias for \[`Ack`\] (`deckPresets_delete_OperationResult`).
 pub type DeckPresetsDeleteOperationResult = Ack;
 
+/// Schema type `DeckPresetsDeleteParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DeckPresetsDeleteParams {
+    /// JSON field `preset`.
     pub preset: Reference,
+    /// JSON field `replacement`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub replacement: Option<Reference>,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
@@ -555,37 +854,51 @@ pub struct DeckPresetsDeleteParams {
 /// Operation handle returned by `deckPresets_delete_Result`.
 pub type DeckPresetsDeleteResult = OperationHandle;
 
+/// Schema type `DeckPresetsGetParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DeckPresetsGetParams {
+    /// JSON field `preset`.
     pub preset: Reference,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Type alias for \[`DeckPreset`\] (`deckPresets_get_Result`).
 pub type DeckPresetsGetResult = DeckPreset;
 
+/// Schema type `DeckPresetsListParams`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DeckPresetsListParams {
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// List of `deckPresets_list_Result` items.
 pub type DeckPresetsListResult = Vec<EntitySummary>;
 
+/// Type alias for \[`DeckPreset`\] (`deckPresets_update_OperationResult`).
 pub type DeckPresetsUpdateOperationResult = DeckPreset;
 
+/// Schema type `DeckPresetsUpdateParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DeckPresetsUpdateParams {
+    /// JSON field `name`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
+    /// JSON field `preset`.
     pub preset: Reference,
+    /// JSON field `rescheduleFsrs`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reschedule_fsrs: Option<bool>,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
+    /// JSON field `settings`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub settings: Option<PresetPatch>,
 }
@@ -593,213 +906,317 @@ pub struct DeckPresetsUpdateParams {
 /// Operation handle returned by `deckPresets_update_Result`.
 pub type DeckPresetsUpdateResult = OperationHandle;
 
+/// Schema type `DecksCreateParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DecksCreateParams {
+    /// JSON field `name`.
     pub name: String,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Type alias for \[`Deck`\] (`decks_create_Result`).
 pub type DecksCreateResult = Deck;
 
+/// Schema type `DecksDeleteParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DecksDeleteParams {
+    /// JSON field `decks`.
     pub decks: Vec<Reference>,
+    /// JSON field `deleteCards`.
     pub delete_cards: bool,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Schema type `DecksDeleteResult`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DecksDeleteResult {
+    /// JSON field `items`.
     pub items: Vec<DeckDeleteItem>,
 }
 
+/// Schema type `DecksGetCountsParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DecksGetCountsParams {
+    /// JSON field `deck`.
     pub deck: Reference,
+    /// JSON field `includeChildren`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub include_children: Option<bool>,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Type alias for \[`DeckCounts`\] (`decks_getCounts_Result`).
 pub type DecksGetCountsResult = DeckCounts;
 
+/// Schema type `DecksGetParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DecksGetParams {
+    /// JSON field `deck`.
     pub deck: Reference,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Type alias for \[`Deck`\] (`decks_get_Result`).
 pub type DecksGetResult = Deck;
 
+/// Schema type `DecksListParams`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DecksListParams {
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// List of `decks_list_Result` items.
 pub type DecksListResult = Vec<Deck>;
 
+/// Schema type `DecksUpdateParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DecksUpdateParams {
+    /// JSON field `deck`.
     pub deck: Reference,
+    /// JSON field `name`.
     pub name: String,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Type alias for \[`Deck`\] (`decks_update_Result`).
 pub type DecksUpdateResult = Deck;
 
+/// Schema type `Description`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Description {
+    /// JSON field `ankiVersion`.
     pub anki_version: String,
+    /// JSON field `apiMajor`.
     pub api_major: u64,
+    /// JSON field `limits`.
     pub limits: DescriptionLimits,
+    /// JSON field `methods`.
     pub methods: Vec<DescriptionMethod>,
+    /// JSON field `schema`.
     pub schema: BTreeMap<String, serde_json::Value>,
 }
 
+/// Schema type `DescriptionLimits`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DescriptionLimits {
+    /// JSON field `maxActiveOperations`.
     pub max_active_operations: u64,
+    /// JSON field `maxBatchItems`.
     pub max_batch_items: u64,
+    /// JSON field `maxMediaBytes`.
     pub max_media_bytes: u64,
+    /// JSON field `maxPageSize`.
     pub max_page_size: u64,
+    /// JSON field `maxRequestBytes`.
     pub max_request_bytes: u64,
+    /// JSON field `maxRetainedOperations`.
     pub max_retained_operations: u64,
+    /// JSON field `operationRetentionSeconds`.
     pub operation_retention_seconds: u64,
 }
 
+/// Schema type `DescriptionMethod`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DescriptionMethod {
+    /// JSON field `available`.
     pub available: bool,
+    /// JSON field `name`.
     pub name: String,
+    /// JSON field `reason`.
     #[serde(default)]
     pub reason: Option<String>,
 }
 
+/// Schema type `DraftInput`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DraftInput {
+    /// JSON field `deck`.
     pub deck: Reference,
+    /// JSON field `fields`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub fields: Option<FieldValues>,
+    /// JSON field `noteType`.
     pub note_type: Reference,
+    /// JSON field `tags`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tags: Option<Vec<String>>,
 }
 
+/// Tagged union for `Due`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind")]
 pub enum Due {
+    /// Variant tagged with `kind = "position"`.
     #[serde(rename = "position")]
-    Position { position: u64 },
+    Position {
+        /// JSON field `position`.
+        position: u64,
+    },
+    /// Variant tagged with `kind = "timestamp"`.
     #[serde(rename = "timestamp")]
-    Timestamp { at: Timestamp },
+    Timestamp {
+        /// JSON field `at`.
+        at: Timestamp,
+    },
+    /// Variant tagged with `kind = "day"`.
     #[serde(rename = "day")]
-    Day { day: i64 },
+    Day {
+        /// JSON field `day`.
+        day: i64,
+    },
 }
 
+/// Schema type `DueEligibility`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DueEligibility {
+    /// JSON field `available`.
     pub available: bool,
+    /// JSON field `cardId`.
     pub card_id: EntityId,
+    /// JSON field `dueNow`.
     pub due_now: bool,
+    /// JSON field `learnAhead`.
     pub learn_ahead: bool,
 }
 
+/// Schema type `DuplicatePolicy`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DuplicatePolicy {
+    /// JSON field `acrossNoteTypes`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub across_note_types: Option<bool>,
+    /// JSON field `allow`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub allow: Option<bool>,
+    /// JSON field `deck`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub deck: Option<Reference>,
+    /// JSON field `includeChildren`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub include_children: Option<bool>,
+    /// JSON field `scope`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub scope: Option<DuplicatePolicyScope>,
 }
 
+/// Enumerated values for `DuplicatePolicyScope`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum DuplicatePolicyScope {
+    /// JSON value `collection`.
     #[serde(rename = "collection")]
     Collection,
+    /// JSON value `deck`.
     #[serde(rename = "deck")]
     Deck,
 }
 
+/// Schema type `EditorPatch`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EditorPatch {
+    /// JSON field `deck`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub deck: Option<Reference>,
+    /// JSON field `fields`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub fields: Option<FieldValues>,
+    /// JSON field `noteType`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub note_type: Option<Reference>,
+    /// JSON field `tags`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tags: Option<Vec<String>>,
 }
 
+/// Schema type `EditorState`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EditorState {
+    /// JSON field `deck`.
     #[serde(default)]
     pub deck: Option<EntitySummary>,
+    /// JSON field `dirty`.
     pub dirty: bool,
+    /// JSON field `fields`.
     pub fields: FieldValues,
+    /// JSON field `id`.
     pub id: String,
+    /// JSON field `kind`.
     pub kind: EditorStateKind,
+    /// JSON field `noteId`.
     #[serde(default)]
     pub note_id: Option<EntityId>,
+    /// JSON field `noteType`.
     pub note_type: EntitySummary,
+    /// JSON field `session`.
     pub session: SessionId,
+    /// JSON field `tags`.
     pub tags: Vec<String>,
+    /// JSON field `variant`.
     pub variant: EditorStateVariant,
 }
 
+/// Enumerated values for `EditorStateKind`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum EditorStateKind {
+    /// JSON value `add`.
     #[serde(rename = "add")]
     Add,
+    /// JSON value `note`.
     #[serde(rename = "note")]
     Note,
 }
 
+/// Enumerated values for `EditorStateVariant`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum EditorStateVariant {
+    /// JSON value `legacy`.
     #[serde(rename = "legacy")]
     Legacy,
+    /// JSON value `svelte`.
     #[serde(rename = "svelte")]
     Svelte,
+    /// JSON value `custom`.
     #[serde(rename = "custom")]
     Custom,
 }
 
+/// Type alias for \[`EditorState`\] (`editors_openAdd_OperationResult`).
 pub type EditorsOpenAddOperationResult = EditorState;
 
+/// Schema type `EditorsOpenAddParams`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EditorsOpenAddParams {
+    /// JSON field `note`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub note: Option<DraftInput>,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
@@ -807,12 +1224,16 @@ pub struct EditorsOpenAddParams {
 /// Operation handle returned by `editors_openAdd_Result`.
 pub type EditorsOpenAddResult = OperationHandle;
 
+/// Type alias for \[`EditorState`\] (`editors_openNote_OperationResult`).
 pub type EditorsOpenNoteOperationResult = EditorState;
 
+/// Schema type `EditorsOpenNoteParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EditorsOpenNoteParams {
+    /// JSON field `noteId`.
     pub note_id: EntityId,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
@@ -820,23 +1241,32 @@ pub struct EditorsOpenNoteParams {
 /// Operation handle returned by `editors_openNote_Result`.
 pub type EditorsOpenNoteResult = OperationHandle;
 
+/// Type alias for \[`EditorState`\] (`editors_updateDraft_OperationResult`).
 pub type EditorsUpdateDraftOperationResult = EditorState;
 
+/// Schema type `EditorsUpdateDraftParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EditorsUpdateDraftParams {
+    /// JSON field `editorId`.
     pub editor_id: String,
+    /// JSON field `mode`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mode: Option<EditorsUpdateDraftParamsMode>,
+    /// JSON field `patch`.
     pub patch: EditorPatch,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Enumerated values for `EditorsUpdateDraftParamsMode`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum EditorsUpdateDraftParamsMode {
+    /// JSON value `replace`.
     #[serde(rename = "replace")]
     Replace,
+    /// JSON value `append`.
     #[serde(rename = "append")]
     Append,
 }
@@ -847,249 +1277,360 @@ pub type EditorsUpdateDraftResult = OperationHandle;
 /// Positive signed int64 in decimal; additionally enforce <= 9223372036854775807.
 pub type EntityId = String;
 
+/// Schema type `EntitySummary`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EntitySummary {
+    /// JSON field `id`.
     pub id: EntityId,
+    /// JSON field `name`.
     pub name: String,
 }
 
+/// Schema type `Error`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Error {
+    /// JSON field `code`.
     pub code: i64,
+    /// JSON field `data`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub data: Option<ErrorData>,
+    /// JSON field `message`.
     pub message: String,
 }
 
+/// Schema type `ErrorData`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ErrorData {
+    /// JSON field `details`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub details: Option<BTreeMap<String, serde_json::Value>>,
+    /// JSON field `retryable`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub retryable: Option<bool>,
+    /// JSON field `type`.
     #[serde(rename = "type")]
     pub r#type: String,
 }
 
+/// Schema type `ExportResult`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ExportResult {
+    /// JSON field `path`.
     pub path: String,
 }
 
+/// Schema type `FieldConfig`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FieldConfig {
+    /// JSON field `collapsed`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub collapsed: Option<bool>,
+    /// JSON field `description`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
+    /// JSON field `excludeFromSearch`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub exclude_from_search: Option<bool>,
+    /// JSON field `fontFamily`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub font_family: Option<String>,
+    /// JSON field `fontSize`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub font_size: Option<u64>,
+    /// JSON field `name`.
     pub name: String,
+    /// JSON field `plainText`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub plain_text: Option<bool>,
+    /// JSON field `rtl`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rtl: Option<bool>,
+    /// JSON field `sticky`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sticky: Option<bool>,
 }
 
+/// Schema type `FieldPatch`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FieldPatch {
+    /// JSON field `collapsed`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub collapsed: Option<bool>,
+    /// JSON field `description`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
+    /// JSON field `excludeFromSearch`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub exclude_from_search: Option<bool>,
+    /// JSON field `fontFamily`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub font_family: Option<String>,
+    /// JSON field `fontSize`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub font_size: Option<u64>,
+    /// JSON field `name`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
+    /// JSON field `plainText`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub plain_text: Option<bool>,
+    /// JSON field `rtl`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rtl: Option<bool>,
+    /// JSON field `sticky`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sticky: Option<bool>,
 }
 
+/// Map of `FieldValues` entries.
 pub type FieldValues = BTreeMap<String, String>;
 
+/// Schema type `IdPage`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct IdPage {
+    /// JSON field `ids`.
     pub ids: Vec<EntityId>,
+    /// JSON field `nextCursor`.
     #[serde(default)]
     pub next_cursor: Option<String>,
 }
 
+/// Schema type `ImportResult`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ImportResult {
+    /// JSON field `completed`.
     pub completed: bool,
 }
 
+/// Schema type `IntegrityResult`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct IntegrityResult {
+    /// JSON field `problems`.
     pub problems: Vec<String>,
+    /// JSON field `repaired`.
     pub repaired: bool,
 }
 
+/// Schema type `Interval`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Interval {
+    /// JSON field `unit`.
     pub unit: IntervalUnit,
+    /// JSON field `value`.
     pub value: u64,
 }
 
+/// Enumerated values for `IntervalUnit`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum IntervalUnit {
+    /// JSON value `seconds`.
     #[serde(rename = "seconds")]
     Seconds,
+    /// JSON value `days`.
     #[serde(rename = "days")]
     Days,
 }
 
+/// Schema type `Issue`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Issue {
+    /// JSON field `field`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub field: Option<String>,
+    /// JSON field `message`.
     pub message: String,
+    /// JSON field `type`.
     #[serde(rename = "type")]
     pub r#type: IssueType,
 }
 
+/// Enumerated values for `IssueType`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum IssueType {
+    /// JSON value `emptyFirstField`.
     #[serde(rename = "emptyFirstField")]
     EmptyFirstField,
+    /// JSON value `duplicate`.
     #[serde(rename = "duplicate")]
     Duplicate,
+    /// JSON value `missingCloze`.
     #[serde(rename = "missingCloze")]
     MissingCloze,
+    /// JSON value `notClozeNoteType`.
     #[serde(rename = "notClozeNoteType")]
     NotClozeNoteType,
+    /// JSON value `notClozeField`.
     #[serde(rename = "notClozeField")]
     NotClozeField,
+    /// JSON value `emptyQuestions`.
     #[serde(rename = "emptyQuestions")]
     EmptyQuestions,
+    /// JSON value `unknownField`.
     #[serde(rename = "unknownField")]
     UnknownField,
+    /// JSON value `invalidTag`.
     #[serde(rename = "invalidTag")]
     InvalidTag,
 }
 
+/// Schema type `MediaDeleteParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MediaDeleteParams {
+    /// JSON field `filename`.
     pub filename: MediaFilename,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Type alias for \[`Ack`\] (`media_delete_Result`).
 pub type MediaDeleteResult = Ack;
 
+/// Schema type `MediaFile`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MediaFile {
+    /// JSON field `data`.
     pub data: String,
+    /// JSON field `filename`.
     pub filename: String,
 }
 
+/// String value for `MediaFilename`.
 pub type MediaFilename = String;
 
+/// Schema type `MediaGetDirectoryParams`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MediaGetDirectoryParams {
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Schema type `MediaGetDirectoryResult`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MediaGetDirectoryResult {
+    /// JSON field `path`.
     pub path: String,
 }
 
+/// Schema type `MediaGetParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MediaGetParams {
+    /// JSON field `filename`.
     pub filename: MediaFilename,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Type alias for \[`MediaFile`\] (`media_get_Result`).
 pub type MediaGetResult = MediaFile;
 
+/// Schema type `MediaListParams`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MediaListParams {
+    /// JSON field `pattern`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pattern: Option<MediaFilename>,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// List of `media_list_Result` items.
 pub type MediaListResult = Vec<String>;
 
+/// Schema type `MediaSkip`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MediaSkip {
+    /// JSON field `algorithm`.
     pub algorithm: MediaSkipAlgorithm,
+    /// JSON field `digest`.
     pub digest: String,
 }
 
+/// Enumerated values for `MediaSkipAlgorithm`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum MediaSkipAlgorithm {
+    /// JSON value `md5`.
     #[serde(rename = "md5")]
     Md5,
+    /// JSON value `sha256`.
     #[serde(rename = "sha256")]
     Sha256,
 }
 
+/// Untagged union for `MediaSource`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum MediaSource {
-    Data { data: String },
-    Path { path: String },
-    Url { url: String },
+    /// Variant `Data`.
+    Data {
+        /// JSON field `data`.
+        data: String,
+    },
+    /// Variant `Path`.
+    Path {
+        /// JSON field `path`.
+        path: String,
+    },
+    /// Variant `Url`.
+    Url {
+        /// JSON field `url`.
+        url: String,
+    },
 }
 
+/// Type alias for \[`MediaStored`\] (`media_store_OperationResult`).
 pub type MediaStoreOperationResult = MediaStored;
 
+/// Schema type `MediaStoreParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MediaStoreParams {
+    /// JSON field `collision`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub collision: Option<MediaStoreParamsCollision>,
+    /// JSON field `filename`.
     pub filename: MediaFilename,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
+    /// JSON field `skipIfHash`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub skip_if_hash: Option<MediaSkip>,
+    /// JSON field `source`.
     pub source: MediaSource,
 }
 
+/// Enumerated values for `MediaStoreParamsCollision`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum MediaStoreParamsCollision {
+    /// JSON value `rename`.
     #[serde(rename = "rename")]
     Rename,
+    /// JSON value `replace`.
     #[serde(rename = "replace")]
     Replace,
+    /// JSON value `error`.
     #[serde(rename = "error")]
     Error,
 }
@@ -1097,478 +1638,747 @@ pub enum MediaStoreParamsCollision {
 /// Operation handle returned by `media_store_Result`.
 pub type MediaStoreResult = OperationHandle;
 
+/// Tagged union for `MediaStored`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "status")]
 pub enum MediaStored {
+    /// Variant tagged with `status = "stored"`.
     #[serde(rename = "stored")]
-    Stored { filename: String, sha256: String },
+    Stored {
+        /// JSON field `filename`.
+        filename: String,
+        /// JSON field `sha256`.
+        sha256: String,
+    },
+    /// Variant tagged with `status = "skipped"`.
     #[serde(rename = "skipped")]
     Skipped {
+        /// JSON field `filename`.
         #[serde(default)]
         filename: Option<String>,
+        /// JSON field `sha256`.
         sha256: String,
     },
 }
 
+/// Schema type `MemoryState`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MemoryState {
+    /// JSON field `difficulty`.
     pub difficulty: f64,
+    /// JSON field `stabilityDays`.
     pub stability_days: f64,
 }
 
+/// Schema type `Note`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Note {
+    /// JSON field `cardIds`.
     pub card_ids: Vec<EntityId>,
+    /// JSON field `fields`.
     pub fields: FieldValues,
+    /// JSON field `id`.
     pub id: EntityId,
+    /// JSON field `modifiedAt`.
     pub modified_at: Timestamp,
+    /// JSON field `noteType`.
     pub note_type: EntitySummary,
+    /// JSON field `tags`.
     pub tags: Vec<String>,
 }
 
+/// Schema type `NoteCreated`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NoteCreated {
+    /// JSON field `cardIds`.
     pub card_ids: Vec<EntityId>,
+    /// JSON field `noteId`.
     pub note_id: EntityId,
 }
 
+/// Untagged union for `NoteCreationItem`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum NoteCreationItem {
-    Success { index: u64, result: NoteCreated },
-    Error { error: Error, index: u64 },
+    /// Variant `Success`.
+    Success {
+        /// JSON field `index`.
+        index: u64,
+        /// JSON field `result`.
+        result: NoteCreated,
+    },
+    /// Variant `Error`.
+    Error {
+        /// JSON field `error`.
+        error: Error,
+        /// JSON field `index`.
+        index: u64,
+    },
 }
 
+/// Untagged union for `NoteDeleteItem`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum NoteDeleteItem {
-    Success { index: u64, result: Ack },
-    Error { error: Error, index: u64 },
+    /// Variant `Success`.
+    Success {
+        /// JSON field `index`.
+        index: u64,
+        /// JSON field `result`.
+        result: Ack,
+    },
+    /// Variant `Error`.
+    Error {
+        /// JSON field `error`.
+        error: Error,
+        /// JSON field `index`.
+        index: u64,
+    },
 }
 
+/// Untagged union for `NoteGetItem`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum NoteGetItem {
-    Success { index: u64, result: Box<Note> },
-    Error { error: Error, index: u64 },
+    /// Variant `Success`.
+    Success {
+        /// JSON field `index`.
+        index: u64,
+        /// JSON field `result`.
+        result: Box<Note>,
+    },
+    /// Variant `Error`.
+    Error {
+        /// JSON field `error`.
+        error: Error,
+        /// JSON field `index`.
+        index: u64,
+    },
 }
 
+/// Schema type `NoteInput`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NoteInput {
+    /// JSON field `deck`.
     pub deck: Reference,
+    /// JSON field `duplicates`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub duplicates: Option<DuplicatePolicy>,
+    /// JSON field `fields`.
     pub fields: FieldValues,
+    /// JSON field `noteType`.
     pub note_type: Reference,
+    /// JSON field `rejectEmptyQuestions`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reject_empty_questions: Option<bool>,
+    /// JSON field `tags`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tags: Option<Vec<String>>,
 }
 
+/// Schema type `NotePatch`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NotePatch {
+    /// JSON field `fields`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub fields: Option<FieldValues>,
+    /// JSON field `tags`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tags: Option<Vec<String>>,
 }
 
+/// Schema type `NoteType`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NoteType {
+    /// JSON field `css`.
     pub css: String,
+    /// JSON field `fields`.
     pub fields: Vec<FieldConfig>,
+    /// JSON field `id`.
     pub id: EntityId,
+    /// JSON field `kind`.
     pub kind: NoteTypeKind,
+    /// JSON field `latexFooter`.
     pub latex_footer: String,
+    /// JSON field `latexHeader`.
     pub latex_header: String,
+    /// JSON field `latexSvg`.
     pub latex_svg: bool,
+    /// JSON field `modifiedAt`.
     pub modified_at: Timestamp,
+    /// JSON field `name`.
     pub name: String,
+    /// JSON field `sortField`.
     pub sort_field: String,
+    /// JSON field `templates`.
     pub templates: Vec<TemplateConfig>,
 }
 
+/// Untagged union for `NoteTypeCleanupItem`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum NoteTypeCleanupItem {
-    Success { index: u64, result: Ack },
-    Error { error: Error, index: u64 },
+    /// Variant `Success`.
+    Success {
+        /// JSON field `index`.
+        index: u64,
+        /// JSON field `result`.
+        result: Ack,
+    },
+    /// Variant `Error`.
+    Error {
+        /// JSON field `error`.
+        error: Error,
+        /// JSON field `index`.
+        index: u64,
+    },
 }
 
+/// Enumerated values for `NoteTypeKind`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum NoteTypeKind {
+    /// JSON value `normal`.
     #[serde(rename = "normal")]
     Normal,
+    /// JSON value `cloze`.
     #[serde(rename = "cloze")]
     Cloze,
 }
 
+/// Schema type `NoteTypePatch`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NoteTypePatch {
+    /// JSON field `css`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub css: Option<String>,
+    /// JSON field `latexFooter`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub latex_footer: Option<String>,
+    /// JSON field `latexHeader`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub latex_header: Option<String>,
+    /// JSON field `latexSvg`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub latex_svg: Option<bool>,
+    /// JSON field `name`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
+    /// JSON field `sortField`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sort_field: Option<String>,
 }
 
+/// Schema type `NoteTypesCreateParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NoteTypesCreateParams {
+    /// JSON field `css`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub css: Option<String>,
+    /// JSON field `fields`.
     pub fields: Vec<FieldConfig>,
+    /// JSON field `kind`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub kind: Option<NoteTypesCreateParamsKind>,
+    /// JSON field `latexFooter`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub latex_footer: Option<String>,
+    /// JSON field `latexHeader`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub latex_header: Option<String>,
+    /// JSON field `latexSvg`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub latex_svg: Option<bool>,
+    /// JSON field `name`.
     pub name: String,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
+    /// JSON field `sortField`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sort_field: Option<String>,
+    /// JSON field `templates`.
     pub templates: Vec<TemplateConfig>,
 }
 
+/// Enumerated values for `NoteTypesCreateParamsKind`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum NoteTypesCreateParamsKind {
+    /// JSON value `normal`.
     #[serde(rename = "normal")]
     Normal,
+    /// JSON value `cloze`.
     #[serde(rename = "cloze")]
     Cloze,
 }
 
+/// Type alias for \[`NoteType`\] (`noteTypes_create_Result`).
 pub type NoteTypesCreateResult = NoteType;
 
+/// Schema type `NoteTypesDeleteUnusedParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NoteTypesDeleteUnusedParams {
+    /// JSON field `noteTypes`.
     pub note_types: Vec<Reference>,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Schema type `NoteTypesDeleteUnusedResult`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NoteTypesDeleteUnusedResult {
+    /// JSON field `items`.
     pub items: Vec<NoteTypeCleanupItem>,
 }
 
+/// Schema type `NoteTypesEditStructureParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NoteTypesEditStructureParams {
+    /// JSON field `edits`.
     pub edits: Vec<StructureEdit>,
+    /// JSON field `noteType`.
     pub note_type: Reference,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Type alias for \[`NoteType`\] (`noteTypes_editStructure_Result`).
 pub type NoteTypesEditStructureResult = NoteType;
 
+/// Schema type `NoteTypesGetParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NoteTypesGetParams {
+    /// JSON field `noteType`.
     pub note_type: Reference,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Type alias for \[`NoteType`\] (`noteTypes_get_Result`).
 pub type NoteTypesGetResult = NoteType;
 
+/// Schema type `NoteTypesGetTemplateUsageParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NoteTypesGetTemplateUsageParams {
+    /// JSON field `noteType`.
     pub note_type: Reference,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// List of `noteTypes_getTemplateUsage_Result` items.
 pub type NoteTypesGetTemplateUsageResult = Vec<TemplateUsage>;
 
+/// Schema type `NoteTypesListParams`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NoteTypesListParams {
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// List of `noteTypes_list_Result` items.
 pub type NoteTypesListResult = Vec<EntitySummary>;
 
+/// Schema type `NoteTypesReplaceTextParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NoteTypesReplaceTextParams {
+    /// JSON field `allNoteTypes`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub all_note_types: Option<bool>,
+    /// JSON field `find`.
     pub find: String,
+    /// JSON field `noteTypes`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub note_types: Option<Vec<Reference>>,
+    /// JSON field `replace`.
     pub replace: String,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
+    /// JSON field `targets`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub targets: Option<Vec<NoteTypesReplaceTextParamsTarget>>,
 }
 
+/// Enumerated values for `NoteTypesReplaceTextParamsTarget`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum NoteTypesReplaceTextParamsTarget {
+    /// JSON value `question`.
     #[serde(rename = "question")]
     Question,
+    /// JSON value `answer`.
     #[serde(rename = "answer")]
     Answer,
+    /// JSON value `css`.
     #[serde(rename = "css")]
     Css,
 }
 
+/// Type alias for \[`Count`\] (`noteTypes_replaceText_Result`).
 pub type NoteTypesReplaceTextResult = Count;
 
+/// Schema type `NoteTypesUpdateParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NoteTypesUpdateParams {
+    /// JSON field `noteType`.
     pub note_type: Reference,
+    /// JSON field `patch`.
     pub patch: NoteTypePatch,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Type alias for \[`NoteType`\] (`noteTypes_update_Result`).
 pub type NoteTypesUpdateResult = NoteType;
 
+/// Untagged union for `NoteValidationItem`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum NoteValidationItem {
-    Success { index: u64, result: Validation },
-    Error { error: Error, index: u64 },
+    /// Variant `Success`.
+    Success {
+        /// JSON field `index`.
+        index: u64,
+        /// JSON field `result`.
+        result: Validation,
+    },
+    /// Variant `Error`.
+    Error {
+        /// JSON field `error`.
+        error: Error,
+        /// JSON field `index`.
+        index: u64,
+    },
 }
 
+/// Schema type `NotesConvertParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NotesConvertParams {
+    /// JSON field `fields`.
     pub fields: Vec<ConversionMapping>,
+    /// JSON field `ids`.
     pub ids: Vec<EntityId>,
+    /// JSON field `planToken`.
     pub plan_token: String,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
+    /// JSON field `target`.
     pub target: Reference,
+    /// JSON field `templates`.
     pub templates: Vec<ConversionMapping>,
 }
 
+/// Type alias for \[`Count`\] (`notes_convert_Result`).
 pub type NotesConvertResult = Count;
 
+/// Schema type `NotesCreateManyParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NotesCreateManyParams {
+    /// JSON field `atomic`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub atomic: Option<bool>,
+    /// JSON field `notes`.
     pub notes: Vec<NoteInput>,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Schema type `NotesCreateManyResult`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NotesCreateManyResult {
+    /// JSON field `items`.
     pub items: Vec<NoteCreationItem>,
 }
 
+/// Schema type `NotesCreateParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NotesCreateParams {
+    /// JSON field `deck`.
     pub deck: Reference,
+    /// JSON field `duplicates`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub duplicates: Option<DuplicatePolicy>,
+    /// JSON field `fields`.
     pub fields: FieldValues,
+    /// JSON field `noteType`.
     pub note_type: Reference,
+    /// JSON field `rejectEmptyQuestions`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reject_empty_questions: Option<bool>,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
+    /// JSON field `tags`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tags: Option<Vec<String>>,
 }
 
+/// Type alias for \[`NoteCreated`\] (`notes_create_Result`).
 pub type NotesCreateResult = NoteCreated;
 
+/// Schema type `NotesDeleteParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NotesDeleteParams {
+    /// JSON field `ids`.
     pub ids: Vec<EntityId>,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Schema type `NotesDeleteResult`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NotesDeleteResult {
+    /// JSON field `items`.
     pub items: Vec<NoteDeleteItem>,
 }
 
+/// Schema type `NotesFindEmptyParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NotesFindEmptyParams {
+    /// JSON field `criterion`.
     pub criterion: NotesFindEmptyParamsCriterion,
+    /// JSON field `cursor`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cursor: Option<String>,
+    /// JSON field `limit`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub limit: Option<u64>,
+    /// JSON field `query`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub query: Option<String>,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Enumerated values for `NotesFindEmptyParamsCriterion`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum NotesFindEmptyParamsCriterion {
+    /// JSON value `allFieldsEmpty`.
     #[serde(rename = "allFieldsEmpty")]
     AllFieldsEmpty,
+    /// JSON value `noCards`.
     #[serde(rename = "noCards")]
     NoCards,
+    /// JSON value `allQuestionsEmpty`.
     #[serde(rename = "allQuestionsEmpty")]
     AllQuestionsEmpty,
 }
 
+/// Type alias for \[`IdPage`\] (`notes_findEmpty_Result`).
 pub type NotesFindEmptyResult = IdPage;
 
+/// Schema type `NotesGetManyParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NotesGetManyParams {
+    /// JSON field `ids`.
     pub ids: Vec<EntityId>,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Schema type `NotesGetManyResult`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NotesGetManyResult {
+    /// JSON field `items`.
     pub items: Vec<NoteGetItem>,
 }
 
+/// Schema type `NotesGetParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NotesGetParams {
+    /// JSON field `id`.
     pub id: EntityId,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Type alias for \[`Note`\] (`notes_get_Result`).
 pub type NotesGetResult = Note;
 
+/// Schema type `NotesPlanConversionParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NotesPlanConversionParams {
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
+    /// JSON field `source`.
     pub source: Reference,
+    /// JSON field `target`.
     pub target: Reference,
 }
 
+/// Type alias for \[`ConversionPlan`\] (`notes_planConversion_Result`).
 pub type NotesPlanConversionResult = ConversionPlan;
 
+/// Schema type `NotesSearchParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NotesSearchParams {
+    /// JSON field `cursor`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cursor: Option<String>,
+    /// JSON field `limit`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub limit: Option<u64>,
+    /// JSON field `query`.
     pub query: String,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
+    /// JSON field `sort`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sort: Option<Sort>,
 }
 
+/// Type alias for \[`IdPage`\] (`notes_search_Result`).
 pub type NotesSearchResult = IdPage;
 
+/// Schema type `NotesUpdateParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NotesUpdateParams {
+    /// JSON field `id`.
     pub id: EntityId,
+    /// JSON field `patch`.
     pub patch: NotePatch,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Type alias for \[`Note`\] (`notes_update_Result`).
 pub type NotesUpdateResult = Note;
 
+/// Schema type `NotesValidateManyParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NotesValidateManyParams {
+    /// JSON field `notes`.
     pub notes: Vec<NoteInput>,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Schema type `NotesValidateManyResult`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NotesValidateManyResult {
+    /// JSON field `items`.
     pub items: Vec<NoteValidationItem>,
 }
 
+/// Schema type `NotesValidateParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NotesValidateParams {
+    /// JSON field `note`.
     pub note: NoteInput,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Type alias for \[`Validation`\] (`notes_validate_Result`).
 pub type NotesValidateResult = Validation;
 
 /// Status and result of an asynchronous operation returned by `operations.get` or `operations.cancel`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Operation {
+    /// Unique operation identifier.
     pub operation_id: String,
+    /// RPC method name that initiated the operation.
     pub method: String,
+    /// Associated collection session token, if collection-scoped.
     pub session: Option<SessionId>,
+    /// Timestamp when the operation was created.
     pub created_at: Timestamp,
+    /// Timestamp when the operation was last updated.
     pub updated_at: Timestamp,
+    /// Whether the operation can be cancelled via `operations.cancel`.
     pub cancellable: bool,
+    /// Optional progress information while the operation is running.
     pub progress: Option<Progress>,
+    /// Current lifecycle state of the operation.
     pub state: OperationState,
+    /// Final result payload when `state` is [`OperationState::Succeeded`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub result: Option<serde_json::Value>,
+    /// Structured error payload when `state` is [`OperationState::Failed`] or [`OperationState::Cancelled`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub error: Option<Error>,
 }
 
+/// Schema type `OperationBase`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct OperationBase {
+    /// JSON field `cancellable`.
     pub cancellable: bool,
+    /// JSON field `createdAt`.
     pub created_at: Timestamp,
+    /// JSON field `method`.
     pub method: String,
+    /// JSON field `operationId`.
     pub operation_id: String,
+    /// JSON field `progress`.
     #[serde(default)]
     pub progress: Option<Progress>,
+    /// JSON field `session`.
     #[serde(default)]
     pub session: Option<SessionId>,
+    /// JSON field `updatedAt`.
     pub updated_at: Timestamp,
 }
 
+/// Schema type `OperationHandle`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct OperationHandle {
+    /// JSON field `method`.
     pub method: String,
+    /// JSON field `operationId`.
     pub operation_id: String,
+    /// JSON field `session`.
     #[serde(default)]
     pub session: Option<SessionId>,
 }
@@ -1576,49 +2386,68 @@ pub struct OperationHandle {
 /// Lifecycle state of an asynchronous operation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum OperationState {
+    /// Operation is queued and waiting to start.
     #[serde(rename = "queued")]
     Queued,
+    /// Operation is currently executing.
     #[serde(rename = "running")]
     Running,
+    /// Operation is waiting for user interaction in Anki.
     #[serde(rename = "waitingForUser")]
     WaitingForUser,
+    /// Operation completed successfully.
     #[serde(rename = "succeeded")]
     Succeeded,
+    /// Operation terminated with an error.
     #[serde(rename = "failed")]
     Failed,
+    /// Operation was cancelled before completion.
     #[serde(rename = "cancelled")]
     Cancelled,
 }
 
+/// Schema type `OperationsCancelParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct OperationsCancelParams {
+    /// JSON field `operationId`.
     pub operation_id: String,
 }
 
+/// Schema type `OperationsCancelResult`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct OperationsCancelResult {
+    /// JSON field `requested`.
     pub requested: bool,
 }
 
+/// Schema type `OperationsGetParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct OperationsGetParams {
+    /// JSON field `operationId`.
     pub operation_id: String,
 }
 
+/// Type alias for \[`Operation`\] (`operations_get_Result`).
 pub type OperationsGetResult = Operation;
 
+/// Type alias for \[`ExportResult`\] (`packages_export_OperationResult`).
 pub type PackagesExportOperationResult = ExportResult;
 
+/// Schema type `PackagesExportParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PackagesExportParams {
+    /// JSON field `deck`.
     pub deck: Reference,
+    /// JSON field `includeScheduling`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub include_scheduling: Option<bool>,
+    /// JSON field `path`.
     pub path: String,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
@@ -1626,12 +2455,16 @@ pub struct PackagesExportParams {
 /// Operation handle returned by `packages_export_Result`.
 pub type PackagesExportResult = OperationHandle;
 
+/// Type alias for \[`ImportResult`\] (`packages_import_OperationResult`).
 pub type PackagesImportOperationResult = ImportResult;
 
+/// Schema type `PackagesImportParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PackagesImportParams {
+    /// JSON field `path`.
     pub path: String,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
@@ -1639,1062 +2472,1587 @@ pub struct PackagesImportParams {
 /// Operation handle returned by `packages_import_Result`.
 pub type PackagesImportResult = OperationHandle;
 
+/// Schema type `Permission`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Permission {
+    /// JSON field `permission`.
     pub permission: PermissionPermission,
+    /// JSON field `requireApiKey`.
     pub require_api_key: bool,
 }
 
+/// Enumerated values for `PermissionPermission`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum PermissionPermission {
+    /// JSON value `granted`.
     #[serde(rename = "granted")]
     Granted,
+    /// JSON value `denied`.
     #[serde(rename = "denied")]
     Denied,
 }
 
+/// Schema type `Prediction`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Prediction {
+    /// JSON field `interval`.
     #[serde(default)]
     pub interval: Option<Interval>,
+    /// JSON field `label`.
     pub label: String,
+    /// JSON field `rating`.
     pub rating: Rating,
 }
 
+/// Schema type `Predictions`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Predictions {
+    /// JSON field `answers`.
     pub answers: Vec<Prediction>,
+    /// JSON field `cardId`.
     pub card_id: EntityId,
+    /// JSON field `source`.
     pub source: String,
+    /// JSON field `stateToken`.
     pub state_token: String,
 }
 
+/// Untagged union for `PresetAssignmentItem`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum PresetAssignmentItem {
-    Success { index: u64, result: Ack },
-    Error { error: Error, index: u64 },
+    /// Variant `Success`.
+    Success {
+        /// JSON field `index`.
+        index: u64,
+        /// JSON field `result`.
+        result: Ack,
+    },
+    /// Variant `Error`.
+    Error {
+        /// JSON field `error`.
+        error: Error,
+        /// JSON field `index`.
+        index: u64,
+    },
 }
 
+/// Type alias for \[`PresetSettings`\] (`PresetPatch`).
 pub type PresetPatch = PresetSettings;
 
+/// Schema type `PresetSettings`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PresetSettings {
+    /// JSON field `answerAction`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub answer_action: Option<PresetSettingsAnswerAction>,
+    /// JSON field `answerDisplaySeconds`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub answer_display_seconds: Option<f64>,
+    /// JSON field `answerTimeLimitSeconds`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub answer_time_limit_seconds: Option<u64>,
+    /// JSON field `buryDayLearning`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bury_day_learning: Option<bool>,
+    /// JSON field `buryNew`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bury_new: Option<bool>,
+    /// JSON field `buryReviews`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bury_reviews: Option<bool>,
+    /// JSON field `dayLearningMix`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub day_learning_mix: Option<PresetSettingsDayLearningMix>,
+    /// JSON field `desiredRetention`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub desired_retention: Option<f64>,
+    /// JSON field `disableAutoplay`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub disable_autoplay: Option<bool>,
+    /// JSON field `easyDaysPercentages`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub easy_days_percentages: Option<Vec<f64>>,
+    /// JSON field `easyMultiplier`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub easy_multiplier: Option<f64>,
+    /// JSON field `fsrsParameters4`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub fsrs_parameters4: Option<Vec<f64>>,
+    /// JSON field `fsrsParameters5`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub fsrs_parameters5: Option<Vec<f64>>,
+    /// JSON field `fsrsParameters6`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub fsrs_parameters6: Option<Vec<f64>>,
+    /// JSON field `graduatingEasyDays`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub graduating_easy_days: Option<u64>,
+    /// JSON field `graduatingGoodDays`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub graduating_good_days: Option<u64>,
+    /// JSON field `hardMultiplier`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub hard_multiplier: Option<f64>,
+    /// JSON field `historicalRetention`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub historical_retention: Option<f64>,
+    /// JSON field `ignoreReviewsBefore`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ignore_reviews_before: Option<String>,
+    /// JSON field `initialEase`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub initial_ease: Option<f64>,
+    /// JSON field `intervalMultiplier`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub interval_multiplier: Option<f64>,
+    /// JSON field `lapseMultiplier`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub lapse_multiplier: Option<f64>,
+    /// JSON field `learnStepsMinutes`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub learn_steps_minutes: Option<Vec<f64>>,
+    /// JSON field `leechAction`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub leech_action: Option<PresetSettingsLeechAction>,
+    /// JSON field `leechThreshold`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub leech_threshold: Option<u64>,
+    /// JSON field `maximumIntervalDays`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub maximum_interval_days: Option<u64>,
+    /// JSON field `minimumLapseIntervalDays`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub minimum_lapse_interval_days: Option<u64>,
+    /// JSON field `newGatherOrder`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub new_gather_order: Option<PresetSettingsNewGatherOrder>,
+    /// JSON field `newInsertOrder`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub new_insert_order: Option<PresetSettingsNewInsertOrder>,
+    /// JSON field `newMix`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub new_mix: Option<PresetSettingsNewMix>,
+    /// JSON field `newPerDay`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub new_per_day: Option<u64>,
+    /// JSON field `newPerDayMinimum`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub new_per_day_minimum: Option<u64>,
+    /// JSON field `newSortOrder`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub new_sort_order: Option<PresetSettingsNewSortOrder>,
+    /// JSON field `parameterSearch`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub parameter_search: Option<String>,
+    /// JSON field `questionAction`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub question_action: Option<PresetSettingsQuestionAction>,
+    /// JSON field `questionDisplaySeconds`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub question_display_seconds: Option<f64>,
+    /// JSON field `relearnStepsMinutes`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub relearn_steps_minutes: Option<Vec<f64>>,
+    /// JSON field `reviewOrder`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub review_order: Option<PresetSettingsReviewOrder>,
+    /// JSON field `reviewsPerDay`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reviews_per_day: Option<u64>,
+    /// JSON field `showTimer`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub show_timer: Option<bool>,
+    /// JSON field `skipQuestionOnAnswerReplay`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub skip_question_on_answer_replay: Option<bool>,
+    /// JSON field `stopTimerOnAnswer`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub stop_timer_on_answer: Option<bool>,
+    /// JSON field `waitForAudio`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub wait_for_audio: Option<bool>,
 }
 
+/// Enumerated values for `PresetSettingsAnswerAction`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum PresetSettingsAnswerAction {
+    /// JSON value `buryCard`.
     #[serde(rename = "buryCard")]
     BuryCard,
+    /// JSON value `again`.
     #[serde(rename = "again")]
     Again,
+    /// JSON value `good`.
     #[serde(rename = "good")]
     Good,
+    /// JSON value `hard`.
     #[serde(rename = "hard")]
     Hard,
+    /// JSON value `showReminder`.
     #[serde(rename = "showReminder")]
     ShowReminder,
 }
 
+/// Enumerated values for `PresetSettingsDayLearningMix`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum PresetSettingsDayLearningMix {
+    /// JSON value `mixed`.
     #[serde(rename = "mixed")]
     Mixed,
+    /// JSON value `afterReviews`.
     #[serde(rename = "afterReviews")]
     AfterReviews,
+    /// JSON value `beforeReviews`.
     #[serde(rename = "beforeReviews")]
     BeforeReviews,
 }
 
+/// Enumerated values for `PresetSettingsLeechAction`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum PresetSettingsLeechAction {
+    /// JSON value `suspend`.
     #[serde(rename = "suspend")]
     Suspend,
+    /// JSON value `tagOnly`.
     #[serde(rename = "tagOnly")]
     TagOnly,
 }
 
+/// Enumerated values for `PresetSettingsNewGatherOrder`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum PresetSettingsNewGatherOrder {
+    /// JSON value `deck`.
     #[serde(rename = "deck")]
     Deck,
+    /// JSON value `deckThenRandomNotes`.
     #[serde(rename = "deckThenRandomNotes")]
     DeckThenRandomNotes,
+    /// JSON value `lowestPosition`.
     #[serde(rename = "lowestPosition")]
     LowestPosition,
+    /// JSON value `highestPosition`.
     #[serde(rename = "highestPosition")]
     HighestPosition,
+    /// JSON value `randomNotes`.
     #[serde(rename = "randomNotes")]
     RandomNotes,
+    /// JSON value `randomCards`.
     #[serde(rename = "randomCards")]
     RandomCards,
 }
 
+/// Enumerated values for `PresetSettingsNewInsertOrder`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum PresetSettingsNewInsertOrder {
+    /// JSON value `due`.
     #[serde(rename = "due")]
     Due,
+    /// JSON value `random`.
     #[serde(rename = "random")]
     Random,
 }
 
+/// Enumerated values for `PresetSettingsNewMix`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum PresetSettingsNewMix {
+    /// JSON value `mixed`.
     #[serde(rename = "mixed")]
     Mixed,
+    /// JSON value `afterReviews`.
     #[serde(rename = "afterReviews")]
     AfterReviews,
+    /// JSON value `beforeReviews`.
     #[serde(rename = "beforeReviews")]
     BeforeReviews,
 }
 
+/// Enumerated values for `PresetSettingsNewSortOrder`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum PresetSettingsNewSortOrder {
+    /// JSON value `template`.
     #[serde(rename = "template")]
     Template,
+    /// JSON value `none`.
     #[serde(rename = "none")]
     None,
+    /// JSON value `templateThenRandom`.
     #[serde(rename = "templateThenRandom")]
     TemplateThenRandom,
+    /// JSON value `randomNoteThenTemplate`.
     #[serde(rename = "randomNoteThenTemplate")]
     RandomNoteThenTemplate,
+    /// JSON value `randomCard`.
     #[serde(rename = "randomCard")]
     RandomCard,
 }
 
+/// Enumerated values for `PresetSettingsQuestionAction`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum PresetSettingsQuestionAction {
+    /// JSON value `showAnswer`.
     #[serde(rename = "showAnswer")]
     ShowAnswer,
+    /// JSON value `showReminder`.
     #[serde(rename = "showReminder")]
     ShowReminder,
 }
 
+/// Enumerated values for `PresetSettingsReviewOrder`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum PresetSettingsReviewOrder {
+    /// JSON value `day`.
     #[serde(rename = "day")]
     Day,
+    /// JSON value `dayThenDeck`.
     #[serde(rename = "dayThenDeck")]
     DayThenDeck,
+    /// JSON value `deckThenDay`.
     #[serde(rename = "deckThenDay")]
     DeckThenDay,
+    /// JSON value `intervalAscending`.
     #[serde(rename = "intervalAscending")]
     IntervalAscending,
+    /// JSON value `intervalDescending`.
     #[serde(rename = "intervalDescending")]
     IntervalDescending,
+    /// JSON value `easeAscending`.
     #[serde(rename = "easeAscending")]
     EaseAscending,
+    /// JSON value `easeDescending`.
     #[serde(rename = "easeDescending")]
     EaseDescending,
+    /// JSON value `retrievabilityAscending`.
     #[serde(rename = "retrievabilityAscending")]
     RetrievabilityAscending,
+    /// JSON value `retrievabilityDescending`.
     #[serde(rename = "retrievabilityDescending")]
     RetrievabilityDescending,
+    /// JSON value `relativeOverdueness`.
     #[serde(rename = "relativeOverdueness")]
     RelativeOverdueness,
+    /// JSON value `random`.
     #[serde(rename = "random")]
     Random,
+    /// JSON value `added`.
     #[serde(rename = "added")]
     Added,
+    /// JSON value `reverseAdded`.
     #[serde(rename = "reverseAdded")]
     ReverseAdded,
 }
 
+/// Schema type `Profile`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Profile {
+    /// JSON field `name`.
     pub name: String,
 }
 
+/// Schema type `ProfilesGetActiveParams`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct ProfilesGetActiveParams {}
 
+/// Nullable `profiles_getActive_Result` value.
 pub type ProfilesGetActiveResult = Option<Profile>;
 
+/// Schema type `ProfilesListParams`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct ProfilesListParams {}
 
+/// List of `profiles_list_Result` items.
 pub type ProfilesListResult = Vec<Profile>;
 
+/// Type alias for \[`Collection`\] (`profiles_switch_OperationResult`).
 pub type ProfilesSwitchOperationResult = Collection;
 
+/// Schema type `ProfilesSwitchParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ProfilesSwitchParams {
+    /// JSON field `name`.
     pub name: String,
 }
 
 /// Operation handle returned by `profiles_switch_Result`.
 pub type ProfilesSwitchResult = OperationHandle;
 
+/// Schema type `Progress`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Progress {
+    /// JSON field `completed`.
     pub completed: u64,
+    /// JSON field `message`.
     pub message: String,
+    /// JSON field `total`.
     #[serde(default)]
     pub total: Option<u64>,
 }
 
+/// Schema type `QueuedCard`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct QueuedCard {
+    /// JSON field `cardId`.
     pub card_id: EntityId,
+    /// JSON field `queue`.
     pub queue: QueuedCardQueue,
 }
 
+/// Enumerated values for `QueuedCardQueue`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum QueuedCardQueue {
+    /// JSON value `new`.
     #[serde(rename = "new")]
     New,
+    /// JSON value `learning`.
     #[serde(rename = "learning")]
     Learning,
+    /// JSON value `review`.
     #[serde(rename = "review")]
     Review,
 }
 
+/// Enumerated values for `Rating`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Rating {
+    /// JSON value `again`.
     #[serde(rename = "again")]
     Again,
+    /// JSON value `hard`.
     #[serde(rename = "hard")]
     Hard,
+    /// JSON value `good`.
     #[serde(rename = "good")]
     Good,
+    /// JSON value `easy`.
     #[serde(rename = "easy")]
     Easy,
 }
 
+/// Schema type `RawCardPatch`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RawCardPatch {
+    /// JSON field `customData`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub custom_data: Option<String>,
+    /// JSON field `fsrsMemory`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub fsrs_memory: Option<MemoryState>,
+    /// JSON field `intervalDays`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub interval_days: Option<u64>,
+    /// JSON field `lapses`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub lapses: Option<u64>,
+    /// JSON field `remainingSteps`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub remaining_steps: Option<u64>,
+    /// JSON field `repetitions`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub repetitions: Option<u64>,
+    /// JSON field `sm2EasePermille`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sm2_ease_permille: Option<u64>,
 }
 
+/// Untagged union for `Reference`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum Reference {
-    Id { id: EntityId },
-    Name { name: String },
+    /// Variant `Id`.
+    Id {
+        /// JSON field `id`.
+        id: EntityId,
+    },
+    /// Variant `Name`.
+    Name {
+        /// JSON field `name`.
+        name: String,
+    },
 }
 
+/// Schema type `RenderedCard`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RenderedCard {
+    /// JSON field `answerHtml`.
     pub answer_html: String,
+    /// JSON field `cardId`.
     pub card_id: EntityId,
+    /// JSON field `css`.
     pub css: String,
+    /// JSON field `questionHtml`.
     pub question_html: String,
 }
 
+/// Schema type `Review`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Review {
+    /// JSON field `answeredAt`.
     pub answered_at: Timestamp,
+    /// JSON field `cardId`.
     pub card_id: EntityId,
+    /// JSON field `elapsedMs`.
     pub elapsed_ms: u64,
+    /// JSON field `factor`.
     pub factor: ReviewFactor,
+    /// JSON field `id`.
     pub id: EntityId,
+    /// JSON field `interval`.
     pub interval: Interval,
+    /// JSON field `kind`.
     pub kind: ReviewKind,
+    /// JSON field `previousInterval`.
     pub previous_interval: Interval,
+    /// JSON field `rating`.
     #[serde(default)]
     pub rating: Option<Rating>,
+    /// JSON field `syncSequence`.
     pub sync_sequence: i64,
 }
 
+/// Schema type `ReviewCount`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReviewCount {
+    /// JSON field `count`.
     pub count: u64,
+    /// JSON field `day`.
     pub day: String,
+    /// JSON field `nextDayAt`.
     pub next_day_at: Timestamp,
 }
 
+/// Schema type `ReviewDay`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReviewDay {
+    /// JSON field `count`.
     pub count: u64,
+    /// JSON field `day`.
     pub day: String,
 }
 
+/// Schema type `ReviewFactor`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReviewFactor {
+    /// JSON field `encoding`.
     pub encoding: ReviewFactorEncoding,
+    /// JSON field `value`.
     pub value: u64,
 }
 
+/// Enumerated values for `ReviewFactorEncoding`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ReviewFactorEncoding {
+    /// JSON value `legacySm2EasePermille`.
     #[serde(rename = "legacySm2EasePermille")]
     LegacySm2EasePermille,
+    /// JSON value `fsrsNormalizedDifficulty`.
     #[serde(rename = "fsrsNormalizedDifficulty")]
     FsrsNormalizedDifficulty,
+    /// JSON value `unknown`.
     #[serde(rename = "unknown")]
     Unknown,
 }
 
+/// Schema type `ReviewImport`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReviewImport {
+    /// JSON field `cardId`.
     pub card_id: EntityId,
+    /// JSON field `elapsedMs`.
     pub elapsed_ms: u64,
+    /// JSON field `factor`.
     pub factor: ReviewImportFactor,
+    /// JSON field `id`.
     pub id: EntityId,
+    /// JSON field `interval`.
     pub interval: Interval,
+    /// JSON field `kind`.
     pub kind: ReviewImportKind,
+    /// JSON field `previousInterval`.
     pub previous_interval: Interval,
+    /// JSON field `rating`.
     #[serde(default)]
     pub rating: Option<Rating>,
 }
 
+/// Schema type `ReviewImportFactor`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReviewImportFactor {
+    /// JSON field `encoding`.
     pub encoding: ReviewImportFactorEncoding,
+    /// JSON field `value`.
     pub value: u64,
 }
 
+/// Enumerated values for `ReviewImportFactorEncoding`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ReviewImportFactorEncoding {
+    /// JSON value `legacySm2EasePermille`.
     #[serde(rename = "legacySm2EasePermille")]
     LegacySm2EasePermille,
+    /// JSON value `fsrsNormalizedDifficulty`.
     #[serde(rename = "fsrsNormalizedDifficulty")]
     FsrsNormalizedDifficulty,
+    /// JSON value `unknown`.
     #[serde(rename = "unknown")]
     Unknown,
 }
 
+/// Enumerated values for `ReviewImportKind`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ReviewImportKind {
+    /// JSON value `learning`.
     #[serde(rename = "learning")]
     Learning,
+    /// JSON value `review`.
     #[serde(rename = "review")]
     Review,
+    /// JSON value `relearning`.
     #[serde(rename = "relearning")]
     Relearning,
+    /// JSON value `filtered`.
     #[serde(rename = "filtered")]
     Filtered,
+    /// JSON value `manual`.
     #[serde(rename = "manual")]
     Manual,
+    /// JSON value `rescheduled`.
     #[serde(rename = "rescheduled")]
     Rescheduled,
 }
 
+/// Enumerated values for `ReviewKind`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ReviewKind {
+    /// JSON value `learning`.
     #[serde(rename = "learning")]
     Learning,
+    /// JSON value `review`.
     #[serde(rename = "review")]
     Review,
+    /// JSON value `relearning`.
     #[serde(rename = "relearning")]
     Relearning,
+    /// JSON value `filtered`.
     #[serde(rename = "filtered")]
     Filtered,
+    /// JSON value `manual`.
     #[serde(rename = "manual")]
     Manual,
+    /// JSON value `rescheduled`.
     #[serde(rename = "rescheduled")]
     Rescheduled,
 }
 
+/// Schema type `ReviewPage`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReviewPage {
+    /// JSON field `items`.
     pub items: Vec<Review>,
+    /// JSON field `nextCursor`.
     #[serde(default)]
     pub next_cursor: Option<String>,
 }
 
+/// Type alias for \[`AnswerResult`\] (`reviewer_answer_OperationResult`).
 pub type ReviewerAnswerOperationResult = AnswerResult;
 
+/// Schema type `ReviewerAnswerParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReviewerAnswerParams {
+    /// JSON field `rating`.
     pub rating: Rating,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
+    /// JSON field `stateToken`.
     pub state_token: String,
 }
 
 /// Operation handle returned by `reviewer_answer_Result`.
 pub type ReviewerAnswerResult = OperationHandle;
 
+/// Schema type `ReviewerGetParams`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReviewerGetParams {
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Type alias for \[`ReviewerState`\] (`reviewer_get_Result`).
 pub type ReviewerGetResult = ReviewerState;
 
+/// Schema type `ReviewerPlayAudioParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReviewerPlayAudioParams {
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
+    /// JSON field `stateToken`.
     pub state_token: String,
 }
 
+/// Type alias for \[`Ack`\] (`reviewer_playAudio_Result`).
 pub type ReviewerPlayAudioResult = Ack;
 
+/// Schema type `ReviewerShowAnswerParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReviewerShowAnswerParams {
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
+    /// JSON field `stateToken`.
     pub state_token: String,
 }
 
+/// Type alias for \[`Ack`\] (`reviewer_showAnswer_Result`).
 pub type ReviewerShowAnswerResult = Ack;
 
+/// Schema type `ReviewerShowQuestionParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReviewerShowQuestionParams {
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
+    /// JSON field `stateToken`.
     pub state_token: String,
 }
 
+/// Type alias for \[`Ack`\] (`reviewer_showQuestion_Result`).
 pub type ReviewerShowQuestionResult = Ack;
 
+/// Schema type `ReviewerStartTimerParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReviewerStartTimerParams {
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
+    /// JSON field `stateToken`.
     pub state_token: String,
 }
 
+/// Type alias for \[`Ack`\] (`reviewer_startTimer_Result`).
 pub type ReviewerStartTimerResult = Ack;
 
+/// Schema type `ReviewerState`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReviewerState {
+    /// JSON field `active`.
     pub active: bool,
+    /// JSON field `answers`.
     pub answers: Vec<Prediction>,
+    /// JSON field `card`.
     #[serde(default)]
     pub card: Option<Card>,
+    /// JSON field `rendered`.
     #[serde(default)]
     pub rendered: Option<RenderedCard>,
+    /// JSON field `side`.
     pub side: ReviewerStateSide,
+    /// JSON field `source`.
     pub source: String,
+    /// JSON field `stateToken`.
     #[serde(default)]
     pub state_token: Option<String>,
 }
 
+/// Enumerated values for `ReviewerStateSide`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ReviewerStateSide {
+    /// JSON value `question`.
     #[serde(rename = "question")]
     Question,
+    /// JSON value `answer`.
     #[serde(rename = "answer")]
     Answer,
+    /// JSON value `none`.
     #[serde(rename = "none")]
     None,
 }
 
+/// Schema type `ReviewsGetLatestIdParams`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReviewsGetLatestIdParams {
+    /// JSON field `cardIds`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub card_ids: Option<Vec<EntityId>>,
+    /// JSON field `deck`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub deck: Option<Reference>,
+    /// JSON field `membership`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub membership: Option<ReviewsGetLatestIdParamsMembership>,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Enumerated values for `ReviewsGetLatestIdParamsMembership`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ReviewsGetLatestIdParamsMembership {
+    /// JSON value `current`.
     #[serde(rename = "current")]
     Current,
+    /// JSON value `home`.
     #[serde(rename = "home")]
     Home,
 }
 
+/// Schema type `ReviewsGetLatestIdResult`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReviewsGetLatestIdResult {
+    /// JSON field `id`.
     #[serde(default)]
     pub id: Option<EntityId>,
 }
 
+/// Schema type `ReviewsListParams`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReviewsListParams {
+    /// JSON field `afterId`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub after_id: Option<EntityId>,
+    /// JSON field `cardIds`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub card_ids: Option<Vec<EntityId>>,
+    /// JSON field `cursor`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cursor: Option<String>,
+    /// JSON field `deck`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub deck: Option<Reference>,
+    /// JSON field `includeChildren`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub include_children: Option<bool>,
+    /// JSON field `includeManual`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub include_manual: Option<bool>,
+    /// JSON field `limit`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub limit: Option<u64>,
+    /// JSON field `membership`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub membership: Option<ReviewsListParamsMembership>,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Enumerated values for `ReviewsListParamsMembership`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ReviewsListParamsMembership {
+    /// JSON value `current`.
     #[serde(rename = "current")]
     Current,
+    /// JSON value `home`.
     #[serde(rename = "home")]
     Home,
 }
 
+/// Type alias for \[`ReviewPage`\] (`reviews_list_Result`).
 pub type ReviewsListResult = ReviewPage;
 
+/// Schema type `SchedulingAnswerManyParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SchedulingAnswerManyParams {
+    /// JSON field `answers`.
     pub answers: Vec<Answer>,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Schema type `SchedulingAnswerManyResult`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SchedulingAnswerManyResult {
+    /// JSON field `items`.
     pub items: Vec<CardAnswerItem>,
 }
 
+/// Schema type `SchedulingAnswerParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SchedulingAnswerParams {
+    /// JSON field `cardId`.
     pub card_id: EntityId,
+    /// JSON field `elapsedMs`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub elapsed_ms: Option<u64>,
+    /// JSON field `rating`.
     pub rating: Rating,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
+    /// JSON field `stateToken`.
     pub state_token: String,
 }
 
+/// Type alias for \[`AnswerResult`\] (`scheduling_answer_Result`).
 pub type SchedulingAnswerResult = AnswerResult;
 
+/// Schema type `SchedulingGetDueParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SchedulingGetDueParams {
+    /// JSON field `cardId`.
     pub card_id: EntityId,
+    /// JSON field `includeLearnAhead`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub include_learn_ahead: Option<bool>,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Type alias for \[`DueEligibility`\] (`scheduling_getDue_Result`).
 pub type SchedulingGetDueResult = DueEligibility;
 
+/// Schema type `SchedulingGetParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SchedulingGetParams {
+    /// JSON field `cardId`.
     pub card_id: EntityId,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Schema type `SchedulingGetQueueParams`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SchedulingGetQueueParams {
+    /// JSON field `fetchLimit`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub fetch_limit: Option<u64>,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Type alias for \[`SchedulingQueue`\] (`scheduling_getQueue_Result`).
 pub type SchedulingGetQueueResult = SchedulingQueue;
 
+/// Type alias for \[`SchedulingState`\] (`scheduling_get_Result`).
 pub type SchedulingGetResult = SchedulingState;
 
+/// Schema type `SchedulingPredictParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SchedulingPredictParams {
+    /// JSON field `cardId`.
     pub card_id: EntityId,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Type alias for \[`Predictions`\] (`scheduling_predict_Result`).
 pub type SchedulingPredictResult = Predictions;
 
+/// Schema type `SchedulingQueue`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SchedulingQueue {
+    /// JSON field `cards`.
     pub cards: Vec<QueuedCard>,
+    /// JSON field `learningCount`.
     pub learning_count: u64,
+    /// JSON field `newCount`.
     pub new_count: u64,
+    /// JSON field `reviewCount`.
     pub review_count: u64,
 }
 
+/// Schema type `SchedulingRepositionNewCardsParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SchedulingRepositionNewCardsParams {
+    /// JSON field `cardIds`.
     pub card_ids: Vec<EntityId>,
+    /// JSON field `randomize`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub randomize: Option<bool>,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
+    /// JSON field `shiftExisting`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub shift_existing: Option<bool>,
+    /// JSON field `startingFrom`.
     pub starting_from: u64,
+    /// JSON field `stepSize`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub step_size: Option<u64>,
 }
 
+/// Schema type `SchedulingRepositionNewCardsResult`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SchedulingRepositionNewCardsResult {
+    /// JSON field `changedCount`.
     pub changed_count: u64,
 }
 
+/// Schema type `SchedulingResetParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SchedulingResetParams {
+    /// JSON field `cardIds`.
     pub card_ids: Vec<EntityId>,
+    /// JSON field `log`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub log: Option<bool>,
+    /// JSON field `resetCounts`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reset_counts: Option<bool>,
+    /// JSON field `restorePosition`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub restore_position: Option<bool>,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Schema type `SchedulingResetResult`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SchedulingResetResult {
+    /// JSON field `items`.
     pub items: Vec<CardResetItem>,
 }
 
+/// Schema type `SchedulingSetDueDateParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SchedulingSetDueDateParams {
+    /// JSON field `cardIds`.
     pub card_ids: Vec<EntityId>,
+    /// JSON field `days`.
     pub days: String,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Schema type `SchedulingSetDueDateResult`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SchedulingSetDueDateResult {
+    /// JSON field `items`.
     pub items: Vec<CardDueDateItem>,
 }
 
+/// Schema type `SchedulingState`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SchedulingState {
+    /// JSON field `desiredRetention`.
     #[serde(default)]
     pub desired_retention: Option<f64>,
+    /// JSON field `due`.
     pub due: Due,
+    /// JSON field `fsrsMemory`.
     #[serde(default)]
     pub fsrs_memory: Option<MemoryState>,
+    /// JSON field `intervalDays`.
     pub interval_days: u64,
+    /// JSON field `lapses`.
     pub lapses: u64,
+    /// JSON field `learningIntervalSeconds`.
     #[serde(default)]
     pub learning_interval_seconds: Option<u64>,
+    /// JSON field `queue`.
     pub queue: SchedulingStateQueue,
+    /// JSON field `remainingSteps`.
     pub remaining_steps: u64,
+    /// JSON field `repetitions`.
     pub repetitions: u64,
+    /// JSON field `sm2EasePermille`.
     pub sm2_ease_permille: u64,
+    /// JSON field `type`.
     #[serde(rename = "type")]
     pub r#type: SchedulingStateType,
 }
 
+/// Enumerated values for `SchedulingStateQueue`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum SchedulingStateQueue {
+    /// JSON value `new`.
     #[serde(rename = "new")]
     New,
+    /// JSON value `learning`.
     #[serde(rename = "learning")]
     Learning,
+    /// JSON value `review`.
     #[serde(rename = "review")]
     Review,
+    /// JSON value `dayLearning`.
     #[serde(rename = "dayLearning")]
     DayLearning,
+    /// JSON value `preview`.
     #[serde(rename = "preview")]
     Preview,
+    /// JSON value `suspended`.
     #[serde(rename = "suspended")]
     Suspended,
+    /// JSON value `buriedByScheduler`.
     #[serde(rename = "buriedByScheduler")]
     BuriedByScheduler,
+    /// JSON value `buriedByUser`.
     #[serde(rename = "buriedByUser")]
     BuriedByUser,
 }
 
+/// Enumerated values for `SchedulingStateType`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum SchedulingStateType {
+    /// JSON value `new`.
     #[serde(rename = "new")]
     New,
+    /// JSON value `learning`.
     #[serde(rename = "learning")]
     Learning,
+    /// JSON value `review`.
     #[serde(rename = "review")]
     Review,
+    /// JSON value `relearning`.
     #[serde(rename = "relearning")]
     Relearning,
 }
 
+/// String value for `SessionId`.
 pub type SessionId = String;
 
+/// Schema type `Sort`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Sort {
+    /// JSON field `column`.
     pub column: String,
+    /// JSON field `direction`.
     pub direction: SortDirection,
 }
 
+/// Enumerated values for `SortDirection`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum SortDirection {
+    /// JSON value `ascending`.
     #[serde(rename = "ascending")]
     Ascending,
+    /// JSON value `descending`.
     #[serde(rename = "descending")]
     Descending,
 }
 
+/// Schema type `StatisticsGetHtmlParams`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StatisticsGetHtmlParams {
+    /// JSON field `deck`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub deck: Option<Reference>,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Schema type `StatisticsGetHtmlResult`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StatisticsGetHtmlResult {
+    /// JSON field `format`.
     pub format: String,
+    /// JSON field `html`.
     pub html: String,
 }
 
+/// Schema type `StatisticsGetReviewDaysParams`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StatisticsGetReviewDaysParams {
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// List of `statistics_getReviewDays_Result` items.
 pub type StatisticsGetReviewDaysResult = Vec<ReviewDay>;
 
+/// Schema type `StatisticsGetSummaryParams`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StatisticsGetSummaryParams {
+    /// JSON field `deck`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub deck: Option<Reference>,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Type alias for \[`StatisticsSummary`\] (`statistics_getSummary_Result`).
 pub type StatisticsGetSummaryResult = StatisticsSummary;
 
+/// Schema type `StatisticsGetTodayParams`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StatisticsGetTodayParams {
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Type alias for \[`ReviewCount`\] (`statistics_getToday_Result`).
 pub type StatisticsGetTodayResult = ReviewCount;
 
+/// Schema type `StatisticsSummary`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StatisticsSummary {
+    /// JSON field `cardCount`.
     pub card_count: u64,
+    /// JSON field `learningCount`.
     pub learning_count: u64,
+    /// JSON field `newCount`.
     pub new_count: u64,
+    /// JSON field `noteCount`.
     pub note_count: u64,
+    /// JSON field `reviewCardCount`.
     pub review_card_count: u64,
+    /// JSON field `reviewCount`.
     pub review_count: u64,
+    /// JSON field `reviewTimeMs`.
     pub review_time_ms: u64,
+    /// JSON field `suspendedCount`.
     pub suspended_count: u64,
 }
 
+/// Tagged union for `StructureEdit`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "op")]
 pub enum StructureEdit {
+    /// Variant tagged with `op = "addField"`.
     #[serde(rename = "addField")]
     AddField {
+        /// JSON field `field`.
         field: FieldConfig,
+        /// JSON field `index`.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         index: Option<u64>,
     },
+    /// Variant tagged with `op = "updateField"`.
     #[serde(rename = "updateField")]
-    UpdateField { name: String, patch: FieldPatch },
+    UpdateField {
+        /// JSON field `name`.
+        name: String,
+        /// JSON field `patch`.
+        patch: FieldPatch,
+    },
+    /// Variant tagged with `op = "moveField"`.
     #[serde(rename = "moveField")]
-    MoveField { index: u64, name: String },
+    MoveField {
+        /// JSON field `index`.
+        index: u64,
+        /// JSON field `name`.
+        name: String,
+    },
+    /// Variant tagged with `op = "removeField"`.
     #[serde(rename = "removeField")]
-    RemoveField { name: String },
+    RemoveField {
+        /// JSON field `name`.
+        name: String,
+    },
+    /// Variant tagged with `op = "addTemplate"`.
     #[serde(rename = "addTemplate")]
     AddTemplate {
+        /// JSON field `index`.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         index: Option<u64>,
+        /// JSON field `template`.
         template: TemplateConfig,
     },
+    /// Variant tagged with `op = "updateTemplate"`.
     #[serde(rename = "updateTemplate")]
-    UpdateTemplate { name: String, patch: TemplatePatch },
+    UpdateTemplate {
+        /// JSON field `name`.
+        name: String,
+        /// JSON field `patch`.
+        patch: TemplatePatch,
+    },
+    /// Variant tagged with `op = "moveTemplate"`.
     #[serde(rename = "moveTemplate")]
-    MoveTemplate { index: u64, name: String },
+    MoveTemplate {
+        /// JSON field `index`.
+        index: u64,
+        /// JSON field `name`.
+        name: String,
+    },
+    /// Variant tagged with `op = "removeTemplate"`.
     #[serde(rename = "removeTemplate")]
-    RemoveTemplate { name: String },
+    RemoveTemplate {
+        /// JSON field `name`.
+        name: String,
+    },
 }
 
+/// Schema type `SyncResult`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SyncResult {
+    /// JSON field `collectionComplete`.
     pub collection_complete: bool,
+    /// JSON field `mediaComplete`.
     pub media_complete: bool,
 }
 
+/// Untagged union for `TagAddItem`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum TagAddItem {
-    Success { index: u64, result: Ack },
-    Error { error: Error, index: u64 },
+    /// Variant `Success`.
+    Success {
+        /// JSON field `index`.
+        index: u64,
+        /// JSON field `result`.
+        result: Ack,
+    },
+    /// Variant `Error`.
+    Error {
+        /// JSON field `error`.
+        error: Error,
+        /// JSON field `index`.
+        index: u64,
+    },
 }
 
+/// Untagged union for `TagRemoveItem`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum TagRemoveItem {
-    Success { index: u64, result: Ack },
-    Error { error: Error, index: u64 },
+    /// Variant `Success`.
+    Success {
+        /// JSON field `index`.
+        index: u64,
+        /// JSON field `result`.
+        result: Ack,
+    },
+    /// Variant `Error`.
+    Error {
+        /// JSON field `error`.
+        error: Error,
+        /// JSON field `index`.
+        index: u64,
+    },
 }
 
+/// Schema type `TagsAddParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TagsAddParams {
+    /// JSON field `noteIds`.
     pub note_ids: Vec<EntityId>,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
+    /// JSON field `tags`.
     pub tags: Vec<String>,
 }
 
+/// Schema type `TagsAddResult`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TagsAddResult {
+    /// JSON field `items`.
     pub items: Vec<TagAddItem>,
 }
 
+/// Schema type `TagsDeleteUnusedParams`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TagsDeleteUnusedParams {
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// Type alias for \[`Count`\] (`tags_deleteUnused_Result`).
 pub type TagsDeleteUnusedResult = Count;
 
+/// Schema type `TagsListParams`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TagsListParams {
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
 }
 
+/// List of `tags_list_Result` items.
 pub type TagsListResult = Vec<String>;
 
+/// Schema type `TagsRemoveParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TagsRemoveParams {
+    /// JSON field `noteIds`.
     pub note_ids: Vec<EntityId>,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
+    /// JSON field `tags`.
     pub tags: Vec<String>,
 }
 
+/// Schema type `TagsRemoveResult`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TagsRemoveResult {
+    /// JSON field `items`.
     pub items: Vec<TagRemoveItem>,
 }
 
+/// Schema type `TagsReplaceParams`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TagsReplaceParams {
+    /// JSON field `allNotes`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub all_notes: Option<bool>,
+    /// JSON field `from`.
     pub from: String,
+    /// JSON field `noteIds`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub note_ids: Option<Vec<EntityId>>,
+    /// JSON field `session`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session: Option<SessionId>,
+    /// JSON field `to`.
     pub to: String,
 }
 
+/// Type alias for \[`Count`\] (`tags_replace_Result`).
 pub type TagsReplaceResult = Count;
 
+/// Schema type `TemplateConfig`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TemplateConfig {
+    /// JSON field `answerHtml`.
     pub answer_html: String,
+    /// JSON field `browserAnswerHtml`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub browser_answer_html: Option<String>,
+    /// JSON field `browserFontFamily`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub browser_font_family: Option<String>,
+    /// JSON field `browserFontSize`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub browser_font_size: Option<u64>,
+    /// JSON field `browserQuestionHtml`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub browser_question_html: Option<String>,
+    /// JSON field `deck`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub deck: Option<Reference>,
+    /// JSON field `name`.
     pub name: String,
+    /// JSON field `questionHtml`.
     pub question_html: String,
 }
 
+/// Schema type `TemplatePatch`.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TemplatePatch {
+    /// JSON field `answerHtml`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub answer_html: Option<String>,
+    /// JSON field `browserAnswerHtml`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub browser_answer_html: Option<String>,
+    /// JSON field `browserFontFamily`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub browser_font_family: Option<String>,
+    /// JSON field `browserFontSize`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub browser_font_size: Option<u64>,
+    /// JSON field `browserQuestionHtml`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub browser_question_html: Option<String>,
+    /// JSON field `deck`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub deck: Option<Reference>,
+    /// JSON field `name`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
+    /// JSON field `questionHtml`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub question_html: Option<String>,
 }
 
+/// Schema type `TemplateUsage`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TemplateUsage {
+    /// JSON field `answerFields`.
     pub answer_fields: Vec<String>,
+    /// JSON field `questionFields`.
     pub question_fields: Vec<String>,
+    /// JSON field `templateName`.
     pub template_name: String,
 }
 
 /// RFC 3339 UTC timestamp, emitted with Z; millisecond precision when available.
 pub type Timestamp = String;
 
+/// Schema type `UndoResult`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UndoResult {
+    /// JSON field `changed`.
     pub changed: bool,
+    /// JSON field `label`.
     pub label: String,
 }
 
+/// Schema type `Validation`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Validation {
+    /// JSON field `duplicateNoteIds`.
     pub duplicate_note_ids: Vec<EntityId>,
+    /// JSON field `issues`.
     pub issues: Vec<Issue>,
+    /// JSON field `valid`.
     pub valid: bool,
 }
